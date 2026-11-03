@@ -1,0 +1,9 @@
+# Windows CPU development only. Run from this file's directory.
+name: vmunet-local
+channels:
+  - defaults
+dependencies:
+  - python=3.10.20
+  - pip
+  - pip:
+      - -r requirements-windows-local.txt

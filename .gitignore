@@ -1,0 +1,86 @@
+# Dataset payloads (relative to the Seg repository root)
+/datasets/
+
+# Python and development tools
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.test_tmp*/
+.tox/
+.nox/
+.hypothesis/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Environments and local settings
+.env
+.env.*
+!.env.example
+!.env.template
+.venv/
+venv/
+env/
+.conda/
+.idea/
+.vscode/
+
+# Build products and extension binaries
+build/
+dist/
+*.egg-info/
+*.so
+*.pyd
+
+# Medical arrays and raw volumes (keep source code and JSON manifests)
+*.nii
+*.nii.gz
+*.npy
+*.npz
+*.h5
+*.hdf5
+
+# Ignore prepared datasets; retain BraTS patient manifests and audit records
+/VM-UNet-main/data/*
+!/VM-UNet-main/data/brats2020/
+/VM-UNet-main/data/brats2020/*
+!/VM-UNet-main/data/brats2020/*.json
+
+# Experiment outputs, including custom baseline/ablation work directories
+/VM-UNet-main/results/
+/VM-UNet-main/logs/
+/VM-UNet-main/runs/
+/VM-UNet-main/wandb/
+/VM-UNet-main/lightning_logs/
+/VM-UNet-main/checkpoints/
+/VM-UNet-main/pre_trained_weights/
+*.pth
+*.pt
+*.ckpt
+*.safetensors
+*.onnx
+events.out.tfevents.*
+*.log
+*.pid
+
+# Temporary files, editor backups and OS metadata
+/tmp/
+/temp/
+/VM-UNet-main/tmp/
+/VM-UNet-main/temp/
+*.tmp
+*.temp
+*.bak
+*.orig
+*.rej
+*~
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+Desktop.ini

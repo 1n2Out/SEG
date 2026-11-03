@@ -1,0 +1,6 @@
+# Additional data/evaluation dependencies. Configure CUDA, torch, timm,
+# einops and mamba_ssm using the server preparation notes in BRATS2020.md.
+# NumPy <2 keeps compatibility with the original PyTorch 1.13 environment.
+numpy>=1.23,<2
+scipy>=1.9,<1.14
+nibabel>=4,<6

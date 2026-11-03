@@ -1,0 +1,421 @@
+"""BraTS entry point: train / evaluate / predict / smoke (no legacy ISIC utilities)."""
+import argparse
+import hashlib
+import json
+import os
+import platform
+import random
+import time
+from pathlib import Path
+from datetime import timedelta
+
+from brats.data import load_manifest, write_json
+from brats.training import EarlyStopping
+
+SOURCE = Path(__file__).resolve().parent
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--mode", choices=("train", "evaluate", "predict", "smoke"), default="train")
+    parser.add_argument("--config", type=Path, default=SOURCE / "configs/brats2020.json")
+    parser.add_argument("--manifest", type=Path, default=SOURCE / "data/brats2020/split_seed42.json")
+    parser.add_argument("--prediction-manifest", type=Path, default=SOURCE / "data/brats2020/official_val.json")
+    parser.add_argument("--cache-dir", type=Path, default=SOURCE / "data/brats2020/cache")
+    parser.add_argument("--work-dir", type=Path, default=SOURCE / "results/brats2020_seed42")
+    parser.add_argument("--checkpoint", type=Path)
+    parser.add_argument("--resume", type=Path)
+    parser.add_argument("--split", choices=("val", "test"), default="test", help="For --mode evaluate")
+    parser.add_argument("--save-predictions", action="store_true")
+    parser.add_argument("--local-rank", "--local_rank", type=int, default=0,
+                        help=argparse.SUPPRESS)  # Older torchrun launchers
+    return parser.parse_args()
+
+
+def seed_worker(worker_id):
+    import numpy as np
+    import torch
+    seed = torch.initial_seed() % 2**32
+    random.seed(seed)
+    np.random.seed(seed)
+
+
+def load_checkpoint(path):
+    import torch
+    # Local experiment files contain optimizer/RNG state, not only tensor weights.
+    try:
+        return torch.load(path, map_location="cpu", weights_only=False)
+    except TypeError:  # PyTorch 1.13 compatibility
+        return torch.load(path, map_location="cpu")
+
+
+def innovation_settings(config):
+    if "region_presence" in config:
+        raise ValueError("region_presence has been retired; use the old run's exports/*_inference.pth "
+                         "for evaluation, or restore its archived source for resume")
+    if "shallow_refinement" not in config:
+        return None
+    from brats.innovations.shallow_refinement import resolve_settings
+    return resolve_settings(config["shallow_refinement"])
+
+
+def build_model(config):
+    settings = innovation_settings(config)
+    import torch
+    if not torch.cuda.is_available():
+        raise RuntimeError("VM-UNet selective scan requires a configured CUDA training environment")
+    from mamba_ssm.ops.selective_scan_interface import selective_scan_fn  # fail early, before training
+    from models.vmunet.vmunet import VMUNet
+    kwargs = dict(input_channels=4, num_classes=4, depths=config["depths"],
+                  depths_decoder=config["depths_decoder"], drop_path_rate=config["drop_path_rate"],
+                  load_ckpt_path=config["pretrained"])
+    if settings is not None and settings["mode"] != "off":
+        from brats.innovations.shallow_refinement.model import ShallowRefinementVMUNet
+        return ShallowRefinementVMUNet(shallow_refinement=settings, **kwargs)
+    return VMUNet(**kwargs)
+
+
+def build_criterion(config):
+    innovation_settings(config)
+    # All current experiments optimize exactly the original CE + regional Dice.
+    from brats.losses import BraTSCEDiceLoss
+    return BraTSCEDiceLoss()
+
+
+def validate_config(config):
+    innovation_settings(config)
+    EarlyStopping(**config.get("early_stopping", {}))
+    if config["input_channels"] != 4 or config["num_classes"] != 4:
+        raise ValueError("This protocol requires four MRI inputs and four exclusive output classes")
+    if config["input_size"] < 32 or config["input_size"] % 32:
+        raise ValueError("input_size must be divisible by 32")
+    for key in ("epochs", "batch_size", "inference_batch_size", "val_interval"):
+        if not isinstance(config[key], int) or config[key] < 1:
+            raise ValueError(f"{key} must be a positive integer")
+    if config["num_workers"] < 0 or config["learning_rate"] <= 0 or config["weight_decay"] < 0:
+        raise ValueError("Invalid optimizer or worker configuration")
+    if len(config["depths"]) != 4 or len(config["depths_decoder"]) != 4:
+        raise ValueError("VM-UNet requires four encoder/decoder stages")
+
+
+def load_training_config(path):
+    config = json.loads(Path(path).read_text(encoding="utf-8"))
+    # Machine-specific launch settings are independent of the training protocol.
+    config.pop("launch", None)
+    settings = innovation_settings(config)
+    if settings is not None:
+        # Persist resolved defaults in config.json/checkpoints for exact resume.
+        config["shallow_refinement"] = settings
+    return config
+
+
+def resolve_pretrained_path(value):
+    if value is None:
+        return None
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError('pretrained must be null or a nonempty checkpoint path')
+    path = Path(value).expanduser()
+    return (path if path.is_absolute() else SOURCE / path).resolve()
+
+
+def capture_rng(generator):
+    import numpy as np
+    import torch
+    return {"python": random.getstate(), "numpy": np.random.get_state(),
+            "torch": torch.get_rng_state(), "cuda": torch.cuda.get_rng_state(),
+            "loader": generator.get_state()}
+
+
+def restore_rng(state, generator):
+    import numpy as np
+    import torch
+    random.setstate(state["python"])
+    np.random.set_state(state["numpy"])
+    torch.set_rng_state(state["torch"])
+    if isinstance(state["cuda"], list):  # Legacy single-process checkpoint
+        torch.cuda.set_rng_state_all(state["cuda"])
+    else:
+        torch.cuda.set_rng_state(state["cuda"])
+    generator.set_state(state["loader"])
+
+
+def save_checkpoint(path, checkpoint):
+    import torch
+    path = Path(path)
+    temporary = path.with_name(path.name + ".tmp")
+    torch.save(checkpoint, temporary)
+    temporary.replace(path)
+
+
+def run(args, rank=0, world_size=1, local_rank=0):
+    distributed = world_size > 1
+    primary = rank == 0
+    if args.mode in ("evaluate", "predict") and args.checkpoint is None:
+        raise ValueError("Evaluation/prediction requires --checkpoint")
+    if args.mode != "train" and args.resume:
+        raise ValueError("--resume is only supported for training")
+    if args.mode in ("train", "smoke") and args.checkpoint:
+        raise ValueError("Use --resume for training or config.pretrained for encoder initialization")
+    manifest = load_manifest(args.manifest)
+    if manifest["purpose"] != "training":
+        raise ValueError("--manifest must be the labeled training split")
+    prediction_manifest = load_manifest(args.prediction_manifest) if args.mode == "predict" else None
+    if prediction_manifest is not None and prediction_manifest["purpose"] != "prediction":
+        raise ValueError("--prediction-manifest must contain only the official prediction cohort")
+    checkpoint = None
+    if args.checkpoint or args.resume:
+        checkpoint = load_checkpoint(args.checkpoint or args.resume)
+        if args.resume and checkpoint.get("evaluation_only", False):
+            raise ValueError("Exported inference checkpoints cannot resume training; use the original latest.pth")
+        if checkpoint["manifest_sha256"] != manifest["sha256"]:
+            raise ValueError("Checkpoint and manifest use different patient splits")
+    requested_config = load_training_config(args.config)
+    pretrained_path = resolve_pretrained_path(requested_config["pretrained"])
+    if pretrained_path is not None:
+        requested_config["pretrained"] = str(pretrained_path)
+        if checkpoint is None and not pretrained_path.is_file():
+            raise FileNotFoundError(f'Pretrained checkpoint not found: {pretrained_path}')
+    config = checkpoint["config"] if args.mode in ("evaluate", "predict") else requested_config
+    validate_config(config)
+    if args.resume and config != checkpoint["config"]:
+        raise ValueError("Resume requires the original config, including epochs and seed")
+    if args.resume and checkpoint.get("world_size", 1) != world_size:
+        raise ValueError("Resume requires the original number of training processes/GPUs")
+    if args.mode == "train":
+        if args.work_dir.exists() and any(args.work_dir.iterdir()) and not args.resume:
+            raise FileExistsError("Work directory is not empty; choose a new --work-dir or use --resume")
+        if args.resume and args.resume.resolve().parent != args.work_dir.resolve():
+            raise ValueError("Resume in the original --work-dir to preserve best.pth and logs")
+        if args.resume and not (args.work_dir / "best.pth").is_file():
+            raise FileNotFoundError("Resume requires the original best.pth alongside latest.pth")
+    import numpy as np
+    import torch
+    import torch.distributed as dist
+    from torch.cuda.amp import GradScaler, autocast
+    from torch.utils.data import DataLoader
+    from torch.utils.data.distributed import DistributedSampler
+    from torch.nn.parallel import DistributedDataParallel
+    from brats.dataset import BraTSSlices
+    from brats.engine import evaluate
+
+    if distributed:
+        dist.barrier()  # All ranks must finish work-directory checks before any writes.
+    seed = config["seed"] + rank
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
+    device = torch.device("cuda", local_rank)
+    model = build_model(config)
+    pretrained_report = None
+    if checkpoint:
+        model.load_state_dict(checkpoint["model_state_dict"], strict=True)
+    elif config["pretrained"]:
+        pretrained_report = model.load_from()
+    model.to(device)
+    raw_model = model
+    if distributed:
+        model = DistributedDataParallel(model, device_ids=[local_rank], output_device=local_rank)
+    if args.mode in ("evaluate", "predict"):
+        split = "official_val" if args.mode == "predict" else args.split
+        summary = evaluate(model, prediction_manifest if args.mode == "predict" else manifest,
+                           args.cache_dir, split, device, config,
+                           args.work_dir / ("evaluation_" + split),
+                           save_predictions=args.save_predictions or args.mode == "predict")
+        summary["checkpoint"] = str(args.checkpoint.resolve())
+        summary["checkpoint_epoch"] = checkpoint["epoch"]
+        summary["training_manifest_sha256"] = manifest["sha256"]
+        write_json(args.work_dir / ("evaluation_" + split) / "summary.json", summary)
+        print(json.dumps(summary, indent=2))
+        return
+    dataset = BraTSSlices(manifest, args.cache_dir, "train", config["input_size"])
+    generator = torch.Generator().manual_seed(seed)
+    # Padding at most world_size-1 slices keeps every rank's step count equal.
+    sampler = DistributedSampler(dataset, num_replicas=world_size, rank=rank,
+                                 seed=config["seed"], shuffle=True) if distributed else None
+    loader = DataLoader(dataset, batch_size=config["batch_size"], shuffle=sampler is None,
+                        sampler=sampler,
+                        num_workers=config["num_workers"], pin_memory=True,
+                        multiprocessing_context="spawn" if distributed and config["num_workers"] > 0 else None,
+                        worker_init_fn=seed_worker, generator=generator)
+    criterion = build_criterion(config)
+    component_names = getattr(criterion, "component_names", ("ce", "dice"))
+    if args.mode == "smoke":
+        batch = next(iter(loader))
+        model.train()
+        logits = model(batch["image"].to(device))
+        loss = criterion(logits, batch["label"].to(device))
+        if not torch.isfinite(loss):
+            raise ValueError("Nonfinite smoke loss")
+        loss.backward()
+        if not all(torch.isfinite(p.grad).all() for p in model.parameters() if p.grad is not None):
+            raise ValueError("Nonfinite smoke gradients")
+        print(f"[rank {rank}] Smoke forward/backward:", tuple(logits.shape), "loss:", loss.item(), flush=True)
+        model.zero_grad(set_to_none=True)
+        if primary:
+            evaluate(raw_model, manifest, args.cache_dir, "val", device, config,
+                     args.work_dir / "smoke", limit=1)
+        if distributed:
+            dist.barrier()
+        return
+
+    optimizer = torch.optim.AdamW(model.parameters(), lr=config["learning_rate"], weight_decay=config["weight_decay"])
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config["epochs"])
+    scaler = GradScaler(enabled=config["amp"])
+    start_epoch, best_score, best_epoch = 1, -1.0, 0
+    early_stopping = EarlyStopping(**config.get("early_stopping", {}))
+    if args.resume:
+        optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+        scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
+        scaler.load_state_dict(checkpoint["scaler_state_dict"])
+        start_epoch, best_score, best_epoch = checkpoint["epoch"] + 1, checkpoint["best_score"], checkpoint["best_epoch"]
+        rng_state = (checkpoint["rng_state_by_rank"][rank] if "rng_state_by_rank" in checkpoint
+                     else checkpoint["rng_state"])
+        restore_rng(rng_state, generator)
+        if "early_stopping_state" in checkpoint:
+            early_stopping.load_state_dict(checkpoint["early_stopping_state"])
+        if early_stopping.stopped:
+            if primary:
+                print("This run has already early-stopped; use best.pth for evaluation.", flush=True)
+            return
+    if primary:
+        args.work_dir.mkdir(parents=True, exist_ok=True)
+    if primary and not args.resume:
+        write_json(args.work_dir / "config.json", config)
+        write_json(args.work_dir / "split.json", manifest)
+        # Research archives and generated artifacts are not experiment source.
+        excluded = {"__pycache__", "tests", "archive", "results"}
+        code_files = sorted(p for p in SOURCE.rglob("*.py")
+                            if not any(part in excluded or part.startswith(".test_tmp")
+                                       for part in p.relative_to(SOURCE).parts))
+        write_json(args.work_dir / "run.json", {
+            "python": platform.python_version(), "torch": torch.__version__, "cuda": torch.version.cuda,
+            "gpu": torch.cuda.get_device_name(device), "numpy": np.__version__,
+            "manifest_sha256": manifest["sha256"], "parameters": sum(p.numel() for p in model.parameters()),
+            "pretrained_report": pretrained_report,
+            "world_size": world_size, "batch_size_per_gpu": config["batch_size"],
+            "global_batch_size": config["batch_size"] * world_size,
+            "sampler_padding_per_epoch": len(sampler) * world_size - len(dataset) if sampler else 0,
+            "code_sha256": {p.relative_to(SOURCE).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in code_files},
+            "cache_dir": str(args.cache_dir.resolve())})
+    if distributed:
+        dist.barrier()
+    if primary:
+        print(f"Training with {world_size} GPU(s); batch/GPU={config['batch_size']}; "
+              f"global batch={config['batch_size'] * world_size}; lr={config['learning_rate']}", flush=True)
+    for epoch in range(start_epoch, config["epochs"] + 1):
+        if sampler is not None:
+            sampler.set_epoch(epoch)
+        model.train()
+        total_loss, n_samples = 0.0, 0
+        component_totals = torch.zeros(len(component_names), dtype=torch.float64, device=device)
+        start = time.perf_counter()
+        for step, batch in enumerate(loader, 1):
+            images, labels = batch["image"].to(device, non_blocking=True), batch["label"].to(device, non_blocking=True)
+            optimizer.zero_grad(set_to_none=True)
+            with autocast(enabled=config["amp"]):
+                loss, components = criterion(model(images), labels, return_components=True)
+            finite = torch.isfinite(loss).to(dtype=torch.int32)
+            if distributed:
+                dist.all_reduce(finite, op=dist.ReduceOp.MIN)
+            if not finite.item():
+                raise ValueError(f"Nonfinite loss at epoch {epoch}, step {step}")
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
+            total_loss += float(loss.item()) * len(images)
+            # Detached GPU accumulation adds no per-step component .item() sync.
+            component_totals += torch.stack([components[name] for name in component_names]) * len(images)
+            n_samples += len(images)
+            if primary and (step == 1 or step % 50 == 0):
+                print(f"epoch={epoch} step={step}/{len(loader)} loss={loss.item():.5f}", flush=True)
+        torch.cuda.synchronize(device)
+        seconds = time.perf_counter() - start
+        totals = torch.cat((torch.tensor([total_loss, n_samples], dtype=torch.float64, device=device),
+                            component_totals))
+        elapsed = torch.tensor(seconds, dtype=torch.float64, device=device)
+        if distributed:
+            dist.all_reduce(totals)
+            dist.all_reduce(elapsed, op=dist.ReduceOp.MAX)
+        record = {"epoch": epoch, "train_loss": (totals[0] / totals[1]).item(),
+                  **{f"train_{name}_loss": (totals[index + 2] / totals[1]).item()
+                     for index, name in enumerate(component_names)},
+                  "learning_rate": optimizer.param_groups[0]["lr"], "train_seconds": elapsed.item()}
+        improved = False
+        if epoch == 1 or epoch % config["val_interval"] == 0 or epoch == config["epochs"]:
+            if primary:
+                # Bypass the DDP wrapper so other ranks can wait without forward collectives.
+                summary = evaluate(raw_model, manifest, args.cache_dir, "val", device, config,
+                                   args.work_dir / "validation" / f"epoch_{epoch:03d}")
+                record["val_mean_dice"] = summary["mean_dice"]
+                record["val_dice"] = {r: summary["regions"][r]["dice"]["mean"] for r in ("WT", "TC", "ET")}
+                early_stopping.update(summary["mean_dice"])
+                # Preserve true maximum-Dice selection independently of min_delta.
+                if summary["mean_dice"] > best_score:
+                    best_score, best_epoch, improved = summary["mean_dice"], epoch, True
+            if distributed:
+                status = [best_score, best_epoch, improved, early_stopping.state_dict()]
+                dist.broadcast_object_list(status, src=0)
+                best_score, best_epoch, improved, stopping_state = status
+                early_stopping.load_state_dict(stopping_state)
+        record["early_stopping"] = early_stopping.state_dict()
+        record["best_epoch"] = best_epoch
+        record["best_val_mean_dice"] = best_score
+        scheduler.step()
+        local_rng = capture_rng(generator)
+        rng_states = [None] * world_size
+        if distributed:
+            dist.all_gather_object(rng_states, local_rng)
+        else:
+            rng_states = [local_rng]
+        if primary:
+            state = {"epoch": epoch, "config": config, "manifest_sha256": manifest["sha256"],
+                     "model_state_dict": raw_model.state_dict(), "optimizer_state_dict": optimizer.state_dict(),
+                     "scheduler_state_dict": scheduler.state_dict(), "scaler_state_dict": scaler.state_dict(),
+                     "best_score": best_score, "best_epoch": best_epoch,
+                     "world_size": world_size, "rng_state_by_rank": rng_states,
+                     "early_stopping_state": early_stopping.state_dict()}
+            if improved:
+                save_checkpoint(args.work_dir / "best.pth", state)
+            save_checkpoint(args.work_dir / "latest.pth", state)
+            with (args.work_dir / "history.jsonl").open("a", encoding="utf-8") as stream:
+                stream.write(json.dumps(record, allow_nan=False) + "\n")
+            print(json.dumps({**record, "best_val_mean_dice": best_score, "best_epoch": best_epoch}), flush=True)
+        if distributed:
+            dist.barrier()  # Complete checkpoint writes before another epoch or teardown.
+        if early_stopping.stopped:
+            if primary:
+                print(f"Early stopping at epoch {epoch}: {early_stopping.bad_validations} validation checks "
+                      f"without an increase > {early_stopping.min_delta}.", flush=True)
+            break
+    # Keep the held-out test untouched until an explicit --mode evaluate request.
+    if primary:
+        print(f"Training finished. Best validation Mean Dice={best_score:.5f} at epoch {best_epoch}.", flush=True)
+
+
+def main():
+    args = parse_args()
+    world_size = int(os.environ.get("WORLD_SIZE", "1"))
+    rank = int(os.environ.get("RANK", "0"))
+    local_rank = int(os.environ.get("LOCAL_RANK", str(args.local_rank)))
+    if world_size > 1 and args.mode not in ("train", "smoke"):
+        raise ValueError("Use one GPU (python, not multi-process torchrun) for evaluation/prediction")
+    import torch
+    import torch.distributed as dist
+    if not torch.cuda.is_available():
+        raise RuntimeError("VM-UNet selective scan requires a configured CUDA training environment")
+    torch.cuda.set_device(local_rank)
+    if world_size > 1:
+        # Rank zero performs full 3D validation while the remaining ranks wait.
+        dist.init_process_group(backend="nccl", timeout=timedelta(hours=2))
+    try:
+        run(args, rank, world_size, local_rank)
+    finally:
+        if dist.is_initialized():
+            dist.destroy_process_group()
+
+
+if __name__ == "__main__":
+    main()

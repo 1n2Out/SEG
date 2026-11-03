@@ -1,0 +1,15 @@
+# CPU wheels follow https://pytorch.org/get-started/previous-versions/
+# This environment does not provide Mamba/CUDA or the legacy training toolchain.
+--extra-index-url https://download.pytorch.org/whl/cpu
+-r requirements-dev.txt
+torch==1.13.1+cpu
+torchvision==0.14.1+cpu
+timm==0.4.12
+einops==0.8.1
+numpy==1.26.4
+scipy==1.13.1
+nibabel==5.3.2
+pytest==8.4.2
+matplotlib==3.9.4
+pillow==10.4.0
+h5py==3.11.0

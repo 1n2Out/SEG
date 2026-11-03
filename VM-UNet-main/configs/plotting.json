@@ -1,0 +1,7 @@
+{
+  "dpi": 200,
+  "formats": ["png", "pdf", "svg"],
+  "font_family": "DejaVu Sans",
+  "overlay_alpha": 0.45,
+  "label_colors": {"1": "#e69f00", "2": "#009e73", "4": "#cc79a7"}
+}

@@ -1,0 +1,3 @@
+# Independent CPU plotting; not imported by training.
+-r requirements-brats.txt
+matplotlib>=3.6,<4
