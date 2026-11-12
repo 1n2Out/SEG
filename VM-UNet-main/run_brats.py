@@ -9,7 +9,8 @@ import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
 
-from train_brats import SOURCE, load_training_config, resolve_pretrained_path, validate_config
+from train_brats import (SOURCE, load_training_config, resolve_pretrained_path,
+                         resolve_warm_start_path, validate_config)
 
 
 def source_path(value):
@@ -56,7 +57,8 @@ def select_run(base_dir, run_dir):
 def make_plan(action, config_path, run_dir=None):
     config_path = Path(config_path).resolve()
     config = json.loads(config_path.read_text(encoding="utf-8"))
-    validate_config(load_training_config(config_path))
+    training_config = load_training_config(config_path)
+    validate_config(training_config)
     launch = config.get("launch", {})
     if not isinstance(launch, dict):
         raise ValueError("launch must be an object")
@@ -119,7 +121,8 @@ def make_plan(action, config_path, run_dir=None):
             "work_dir": work_dir, "run_dir": selected_run, "base_dir": base_dir,
             "data_root": data_root, "cache_dir": cache_dir,
             "manifest": manifest, "log_file": log_file,
-            "pretrained_path": resolve_pretrained_path(config.get("pretrained"))}
+            "pretrained_path": resolve_pretrained_path(config.get("pretrained")),
+            "warm_start_path": resolve_warm_start_path(training_config.get("warm_start"))}
 
 
 def check_inputs(plan):
@@ -135,6 +138,10 @@ def check_inputs(plan):
     pretrained = plan["pretrained_path"]
     if action in ("train", "smoke") and pretrained is not None and not pretrained.is_file():
         raise FileNotFoundError(f"Pretrained checkpoint not found: {pretrained}")
+    # Warm start initializes new runs only; resume and test use the run's own checkpoints.
+    warm_start = plan.get("warm_start_path")
+    if action in ("train", "smoke") and warm_start is not None and not warm_start.is_file():
+        raise FileNotFoundError(f"Warm-start checkpoint not found: {warm_start}")
     if action in ("train", "smoke", "test") and work_dir.exists():
         raise FileExistsError("New task directory already exists; launch again to allocate a fresh directory")
     required = ("latest.pth", "best.pth") if action == "resume" else ("best.pth",) if action == "test" else ()

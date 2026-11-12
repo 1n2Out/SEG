@@ -2,6 +2,7 @@
 import argparse
 import hashlib
 import json
+import math
 import os
 import platform
 import random
@@ -49,18 +50,67 @@ def load_checkpoint(path):
         return torch.load(path, map_location="cpu")
 
 
+# Optional model extensions; each is a VMUNet subclass whose new parameters live
+# under the attribute of the same name. At most one is configured per run.
+EXTENSIONS = ("shallow_refinement", "detail_fusion")
+WARM_START_DEFAULTS = {"checkpoint": None, "new_parameter_lr": None}
+
+
 def innovation_settings(config):
+    """Return (name, resolved settings) of the configured model extension, or None."""
     if "region_presence" in config:
         raise ValueError("region_presence has been retired; use the old run's exports/*_inference.pth "
                          "for evaluation, or restore its archived source for resume")
-    if "shallow_refinement" not in config:
+    names = [name for name in EXTENSIONS if name in config]
+    if not names:
         return None
-    from brats.innovations.shallow_refinement import resolve_settings
-    return resolve_settings(config["shallow_refinement"])
+    if len(names) > 1:
+        raise ValueError("Configure at most one model extension, found: " + ", ".join(names))
+    name = names[0]
+    if name == "shallow_refinement":
+        from brats.innovations.shallow_refinement import resolve_settings
+    else:
+        from brats.innovations.detail_fusion import resolve_settings
+    return name, resolve_settings(config[name])
+
+
+def extension_prefixes(config):
+    """State-dict prefixes of the parameters added by an active model extension."""
+    extension = innovation_settings(config)
+    if extension is None or extension[1]["mode"] == "off":
+        return ()
+    return (extension[0] + ".",)
+
+
+def warm_start_settings(config):
+    """Screening-only initialization of the full model from an earlier run.
+
+    Formal experiments keep config.pretrained. Warm start loads every original
+    parameter from a training checkpoint of the same patient split, so new
+    zero-residual extensions begin exactly at that model's output.
+    """
+    if "warm_start" not in config:
+        return None
+    settings = config["warm_start"]
+    if not isinstance(settings, dict):
+        raise ValueError("warm_start must be an object")
+    unknown = set(settings) - set(WARM_START_DEFAULTS)
+    if unknown:
+        raise ValueError("Unknown warm_start settings: " + ", ".join(sorted(unknown)))
+    resolved = {**WARM_START_DEFAULTS, **settings}
+    if not isinstance(resolved["checkpoint"], str) or not resolved["checkpoint"].strip():
+        raise ValueError("warm_start.checkpoint must be a nonempty checkpoint path")
+    rate = resolved["new_parameter_lr"]
+    if rate is not None and (isinstance(rate, bool) or not isinstance(rate, (int, float))
+                             or not math.isfinite(rate) or rate <= 0):
+        raise ValueError("warm_start.new_parameter_lr must be null or a positive finite number")
+    if config.get("pretrained") is not None:
+        raise ValueError("warm_start replaces pretrained initialization; set pretrained to null")
+    return resolved
 
 
 def build_model(config):
-    settings = innovation_settings(config)
+    extension = innovation_settings(config)
     import torch
     if not torch.cuda.is_available():
         raise RuntimeError("VM-UNet selective scan requires a configured CUDA training environment")
@@ -69,9 +119,13 @@ def build_model(config):
     kwargs = dict(input_channels=4, num_classes=4, depths=config["depths"],
                   depths_decoder=config["depths_decoder"], drop_path_rate=config["drop_path_rate"],
                   load_ckpt_path=config["pretrained"])
-    if settings is not None and settings["mode"] != "off":
-        from brats.innovations.shallow_refinement.model import ShallowRefinementVMUNet
-        return ShallowRefinementVMUNet(shallow_refinement=settings, **kwargs)
+    if extension is not None and extension[1]["mode"] != "off":
+        name, settings = extension
+        if name == "shallow_refinement":
+            from brats.innovations.shallow_refinement.model import ShallowRefinementVMUNet
+            return ShallowRefinementVMUNet(shallow_refinement=settings, **kwargs)
+        from brats.innovations.detail_fusion.model import DetailFusionVMUNet
+        return DetailFusionVMUNet(detail_fusion=settings, **kwargs)
     return VMUNet(**kwargs)
 
 
@@ -84,6 +138,7 @@ def build_criterion(config):
 
 def validate_config(config):
     innovation_settings(config)
+    warm_start_settings(config)
     EarlyStopping(**config.get("early_stopping", {}))
     if config["input_channels"] != 4 or config["num_classes"] != 4:
         raise ValueError("This protocol requires four MRI inputs and four exclusive output classes")
@@ -102,10 +157,13 @@ def load_training_config(path):
     config = json.loads(Path(path).read_text(encoding="utf-8"))
     # Machine-specific launch settings are independent of the training protocol.
     config.pop("launch", None)
-    settings = innovation_settings(config)
-    if settings is not None:
+    extension = innovation_settings(config)
+    if extension is not None:
         # Persist resolved defaults in config.json/checkpoints for exact resume.
-        config["shallow_refinement"] = settings
+        config[extension[0]] = extension[1]
+    warm_start = warm_start_settings(config)
+    if warm_start is not None:
+        config["warm_start"] = warm_start
     return config
 
 
@@ -116,6 +174,60 @@ def resolve_pretrained_path(value):
         raise ValueError('pretrained must be null or a nonempty checkpoint path')
     path = Path(value).expanduser()
     return (path if path.is_absolute() else SOURCE / path).resolve()
+
+
+def resolve_warm_start_path(settings):
+    """Absolute warm-start checkpoint path; relative paths start at the source directory."""
+    if settings is None:
+        return None
+    path = Path(settings["checkpoint"]).expanduser()
+    return (path if path.is_absolute() else SOURCE / path).resolve()
+
+
+def apply_warm_start(model, settings, manifest_sha256, new_prefixes=()):
+    """Load an earlier run's complete model; only extension tensors may stay new.
+
+    The source must use the same patient split. Unexpected or reshaped tensors,
+    and missing tensors outside the extension prefixes, are errors.
+    """
+    path = Path(settings["checkpoint"])
+    source = load_checkpoint(path)
+    if not isinstance(source, dict) or not isinstance(source.get("model_state_dict"), dict):
+        raise ValueError("Warm start requires a training checkpoint containing model_state_dict")
+    if source.get("manifest_sha256") != manifest_sha256:
+        raise ValueError("Warm-start checkpoint uses a different patient split")
+    result = model.load_state_dict(source["model_state_dict"], strict=False)
+    if result.unexpected_keys:
+        raise ValueError("Warm-start checkpoint has tensors absent from this model: "
+                         + ", ".join(sorted(result.unexpected_keys)[:5]))
+    outside = sorted(key for key in result.missing_keys if not key.startswith(tuple(new_prefixes)))
+    if outside:
+        raise ValueError("Warm-start checkpoint lacks original model tensors: " + ", ".join(outside[:5]))
+    checksum = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(4 * 1024 * 1024), b""):
+            checksum.update(chunk)
+    report = {"source_path": str(path), "source_sha256": checksum.hexdigest(),
+              "source_epoch": source.get("epoch"), "source_best_score": source.get("best_score"),
+              "loaded_tensors": len(source["model_state_dict"]),
+              "new_tensors": sorted(result.missing_keys)}
+    print(f"Warm start: {path} (epoch {report['source_epoch']}); loaded={report['loaded_tensors']}, "
+          f"new={len(report['new_tensors'])}", flush=True)
+    return report
+
+
+def optimizer_parameter_groups(model, config):
+    """None keeps one parameter group; warm-start screening may give extensions their own LR."""
+    settings = config.get("warm_start")
+    prefixes = extension_prefixes(config)
+    if settings is None or settings["new_parameter_lr"] is None or not prefixes:
+        return None
+    named = list(model.named_parameters())
+    new = [parameter for name, parameter in named if name.startswith(prefixes)]
+    if not new:
+        raise ValueError("The configured extension added no parameters")
+    original = [parameter for name, parameter in named if not name.startswith(prefixes)]
+    return [{"params": original}, {"params": new, "lr": settings["new_parameter_lr"]}]
 
 
 def capture_rng(generator):
@@ -175,6 +287,11 @@ def run(args, rank=0, world_size=1, local_rank=0):
         requested_config["pretrained"] = str(pretrained_path)
         if checkpoint is None and not pretrained_path.is_file():
             raise FileNotFoundError(f'Pretrained checkpoint not found: {pretrained_path}')
+    warm_start_path = resolve_warm_start_path(requested_config.get("warm_start"))
+    if warm_start_path is not None:
+        requested_config["warm_start"]["checkpoint"] = str(warm_start_path)
+        if checkpoint is None and not warm_start_path.is_file():
+            raise FileNotFoundError(f'Warm-start checkpoint not found: {warm_start_path}')
     config = checkpoint["config"] if args.mode in ("evaluate", "predict") else requested_config
     validate_config(config)
     if args.resume and config != checkpoint["config"]:
@@ -209,9 +326,12 @@ def run(args, rank=0, world_size=1, local_rank=0):
     torch.backends.cudnn.deterministic = True
     device = torch.device("cuda", local_rank)
     model = build_model(config)
-    pretrained_report = None
+    pretrained_report = warm_start_report = None
     if checkpoint:
         model.load_state_dict(checkpoint["model_state_dict"], strict=True)
+    elif config.get("warm_start") is not None:
+        warm_start_report = apply_warm_start(model, config["warm_start"], manifest["sha256"],
+                                             extension_prefixes(config))
     elif config["pretrained"]:
         pretrained_report = model.load_from()
     model.to(device)
@@ -261,7 +381,9 @@ def run(args, rank=0, world_size=1, local_rank=0):
             dist.barrier()
         return
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr=config["learning_rate"], weight_decay=config["weight_decay"])
+    parameter_groups = optimizer_parameter_groups(raw_model, config)
+    optimizer = torch.optim.AdamW(model.parameters() if parameter_groups is None else parameter_groups,
+                                  lr=config["learning_rate"], weight_decay=config["weight_decay"])
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config["epochs"])
     scaler = GradScaler(enabled=config["amp"])
     start_epoch, best_score, best_epoch = 1, -1.0, 0
@@ -294,7 +416,7 @@ def run(args, rank=0, world_size=1, local_rank=0):
             "python": platform.python_version(), "torch": torch.__version__, "cuda": torch.version.cuda,
             "gpu": torch.cuda.get_device_name(device), "numpy": np.__version__,
             "manifest_sha256": manifest["sha256"], "parameters": sum(p.numel() for p in model.parameters()),
-            "pretrained_report": pretrained_report,
+            "pretrained_report": pretrained_report, "warm_start_report": warm_start_report,
             "world_size": world_size, "batch_size_per_gpu": config["batch_size"],
             "global_batch_size": config["batch_size"] * world_size,
             "sampler_padding_per_epoch": len(sampler) * world_size - len(dataset) if sampler else 0,

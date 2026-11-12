@@ -5,7 +5,7 @@
 ## 当前状态
 
 - 采用 **2D 四模态切片训练、3D 患者级评价**：同一轴向层的 T1/T1ce/T2/FLAIR 构成四通道输入，不使用相邻切片。
-- 已完成 baseline 和区域存在性感知 full 的各 100 轮正式训练及本地测试。旧创新方案已停用，当前方案为浅层细节回注，提供 simple/gated 两种配置，正式效果待验证。
+- 已完成 baseline 和区域存在性感知 full 的各 100 轮正式训练及本地测试。旧创新方案已停用。浅层细节回注提供 simple/gated 两种配置；2026-11-12 新增多分辨率细节回注（detail_fusion，concat/gated）及热启动筛选配置，当前优先筛选 detail_fusion gated。两者正式效果均待验证。
 - 仅保留 369 例有标注病例，按患者固定划分为 train/val/test = 259/55/55；125 例官方无标签 validation 数据及专属清单已删除。
 - 本机完整 369 例 v2 缓存已准备并核对，约 29.65 GB，保留用于后续训练和评价。
 - Windows CPU 开发链路和 Linux CUDA/训练恢复链路已有验收记录；浅层细节回注的小清单工程检查见 [使用与验收说明](docs/SHALLOW_REFINEMENT.md)。工程验收与正式实验分别记录。
@@ -20,6 +20,7 @@
 | Windows 环境重建、日常检查及验收记录 | [WINDOWS_LOCAL.md](WINDOWS_LOCAL.md) |
 | 病例图、数据分布图、训练曲线及绘图配置 | [离线绘图指南](docs/PLOTTING.md) |
 | 当前浅层细节回注方案与启动命令 | [SHALLOW_REFINEMENT.md](docs/SHALLOW_REFINEMENT.md) |
+| 多分辨率细节回注、热启动筛选与启动命令 | [DETAIL_FUSION.md](docs/DETAIL_FUSION.md) |
 | 正式实验记录与结果索引 | [EXPERIMENTS_BraTS.md](../RESEARCH_NOTES/EXPERIMENTS_BraTS.md) |
 | 旧区域存在性方案、权重兼容与源码恢复 | [REGION_PRESENCE.md](docs/REGION_PRESENCE.md) |
 | 源码归档与完整性校验 | [archives/README.md](archives/README.md) |
