@@ -1,0 +1,33 @@
+{
+  "input_size": 256,
+  "input_channels": 4,
+  "num_classes": 4,
+  "depths": [
+    2,
+    2,
+    2,
+    2
+  ],
+  "depths_decoder": [
+    2,
+    2,
+    2,
+    1
+  ],
+  "drop_path_rate": 0.2,
+  "seed": 42,
+  "batch_size": 16,
+  "inference_batch_size": 8,
+  "num_workers": 4,
+  "epochs": 100,
+  "learning_rate": 0.0001,
+  "weight_decay": 0.01,
+  "val_interval": 5,
+  "early_stopping": {
+    "enabled": true,
+    "patience": 10,
+    "min_delta": 0.0001
+  },
+  "amp": true,
+  "pretrained": "/home/hzh/hwh/package/vmamba_small_e238_ema.pth"
+}

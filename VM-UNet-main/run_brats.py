@@ -9,6 +9,7 @@ import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
 
+from brats.provenance import code_changes_since, git_state
 from train_brats import (SOURCE, load_training_config, resolve_pretrained_path,
                          resolve_warm_start_path, validate_config)
 
@@ -54,7 +55,15 @@ def select_run(base_dir, run_dir):
     return candidates[0] if candidates else base_dir
 
 
-def make_plan(action, config_path, run_dir=None):
+def parse_gpus(value):
+    """CLI form of launch.gpus: comma-separated indices such as "3" or "0,1"."""
+    try:
+        return [int(item) for item in value.split(",")]
+    except ValueError:
+        raise argparse.ArgumentTypeError("--gpus takes comma-separated GPU indices, e.g. 3 or 0,1") from None
+
+
+def make_plan(action, config_path, run_dir=None, gpus=None):
     config_path = Path(config_path).resolve()
     config = json.loads(config_path.read_text(encoding="utf-8"))
     training_config = load_training_config(config_path)
@@ -62,10 +71,11 @@ def make_plan(action, config_path, run_dir=None):
     launch = config.get("launch", {})
     if not isinstance(launch, dict):
         raise ValueError("launch must be an object")
-    gpus = launch.get("gpus", [0])
+    source = "launch.gpus" if gpus is None else "--gpus"
+    gpus = launch.get("gpus", [0]) if gpus is None else gpus
     if (not isinstance(gpus, list) or not gpus or
             any(type(gpu) is not int or gpu < 0 for gpu in gpus) or len(set(gpus)) != len(gpus)):
-        raise ValueError("launch.gpus must be a nonempty list of distinct nonnegative GPU indices")
+        raise ValueError(source + " must be a nonempty list of distinct nonnegative GPU indices")
     save_predictions = launch.get("save_predictions", True)
     if not isinstance(save_predictions, bool):
         raise ValueError("launch.save_predictions must be a boolean")
@@ -150,6 +160,45 @@ def check_inputs(plan):
             raise FileNotFoundError(f"Missing checkpoint: {plan['run_dir'] / name}")
 
 
+def provenance_problems(plan, allow_dirty=False, allow_code_change=False, confirm_test=False):
+    """Return (errors, warnings) of the source-version and test-set rules for a plan."""
+    action, errors, warnings = plan["action"], [], []
+    if action not in ("train", "resume", "test"):
+        return errors, warnings
+    if action == "train" and not allow_dirty:
+        # Same scope as resume/test: reports and STATE edits on B must not block launches,
+        # while any uncommitted source or config change (tracked or new) does.
+        current = git_state(SOURCE)
+        changed = None if current is None else code_changes_since(SOURCE, current["commit"])
+        if changed is None:
+            errors.append("Git state unavailable; formal training must run from a git checkout "
+                          "(use --allow-dirty only for exploratory runs)")
+        elif changed:
+            errors.append("Uncommitted code changes; commit them before formal training or pass --allow-dirty:\n"
+                          + "\n".join(changed[:20]))
+    if action in ("resume", "test"):
+        try:
+            recorded = json.loads((plan["run_dir"] / "run.json").read_text(encoding="utf-8")).get("git")
+        except (OSError, ValueError):
+            recorded = None
+        if not recorded or not recorded.get("commit"):
+            warnings.append("Training run has no recorded git commit; code equality cannot be checked")
+        elif not allow_code_change:
+            # Docs and reports change constantly; only source changes since the run matter.
+            changed = code_changes_since(SOURCE, recorded["commit"])
+            if changed is None:
+                errors.append(f"Cannot compare code with the run's commit {recorded['commit']} "
+                              "(git unavailable or commit not fetched); fetch it or pass --allow-code-change")
+            elif changed:
+                listed = changed[:20] + ([f"... and {len(changed) - 20} more"] if len(changed) > 20 else [])
+                errors.append(f"Code changed since the run's commit {recorded['commit']}; check out that "
+                              "commit or pass --allow-code-change:\n" + "\n".join(listed))
+    if action == "test" and not confirm_test:
+        errors.append("The held-out test set is sealed; evaluate it only for a user-approved FINAL task "
+                      "and pass --confirm-test")
+    return errors, warnings
+
+
 def reserve_output(plan):
     # Empty directories are accepted by train_brats. Exclusive mkdir also guards
     # simultaneous launches which planned the same timestamp before either wrote.
@@ -181,15 +230,27 @@ def main():
     parser.add_argument("--run-dir", type=Path,
                         help="Original training directory for resume/test; required when multiple runs exist")
     parser.add_argument("--dry-run", action="store_true", help="Print the command without starting a job")
+    parser.add_argument("--gpus", type=parse_gpus,
+                        help="Comma-separated GPU indices overriding launch.gpus for this launch, e.g. 3 or 0,1")
+    parser.add_argument("--allow-dirty", action="store_true",
+                        help="train: allow uncommitted changes (exploratory runs only)")
+    parser.add_argument("--allow-code-change", action="store_true",
+                        help="resume/test: allow source changes since the run's recorded commit")
+    parser.add_argument("--confirm-test", action="store_true",
+                        help="test: confirm a user-approved FINAL evaluation of the held-out test set")
     args = parser.parse_args()
     try:
-        plan = make_plan(args.action, args.config, args.run_dir)
+        plan = make_plan(args.action, args.config, args.run_dir, args.gpus)
         print(f"CUDA_VISIBLE_DEVICES={plan['environment']['CUDA_VISIBLE_DEVICES']} "
               + shlex.join(plan["command"]), flush=True)
         if plan["action"] != "prepare":
             print("Output directory:", plan["work_dir"], flush=True)
         if plan["run_dir"] is not None:
             print("Training run:", plan["run_dir"], flush=True)
+        errors, warnings = provenance_problems(plan, args.allow_dirty, args.allow_code_change,
+                                               args.confirm_test)
+        for message in warnings + (errors if args.dry_run else []):
+            print("Warning:", message, flush=True)
         if args.dry_run:
             if args.background:
                 print(f"Background log: {plan['log_file']}")
@@ -197,6 +258,8 @@ def main():
             return
         if sys.platform != "linux":
             raise RuntimeError("Run jobs on the Linux server; use --dry-run for local command inspection")
+        if errors:
+            raise RuntimeError("\n".join(errors))
         check_inputs(plan)
         reserve_output(plan)
         if args.background:

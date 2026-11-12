@@ -11,6 +11,7 @@ from pathlib import Path
 from datetime import timedelta
 
 from brats.data import load_manifest, write_json
+from brats.provenance import git_state
 from brats.training import EarlyStopping
 
 SOURCE = Path(__file__).resolve().parent
@@ -347,6 +348,7 @@ def run(args, rank=0, world_size=1, local_rank=0):
         summary["checkpoint"] = str(args.checkpoint.resolve())
         summary["checkpoint_epoch"] = checkpoint["epoch"]
         summary["training_manifest_sha256"] = manifest["sha256"]
+        summary["git"] = git_state(SOURCE)
         write_json(args.work_dir / ("evaluation_" + split) / "summary.json", summary)
         print(json.dumps(summary, indent=2))
         return
@@ -421,7 +423,7 @@ def run(args, rank=0, world_size=1, local_rank=0):
             "global_batch_size": config["batch_size"] * world_size,
             "sampler_padding_per_epoch": len(sampler) * world_size - len(dataset) if sampler else 0,
             "code_sha256": {p.relative_to(SOURCE).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in code_files},
-            "cache_dir": str(args.cache_dir.resolve())})
+            "cache_dir": str(args.cache_dir.resolve()), "git": git_state(SOURCE)})
     if distributed:
         dist.barrier()
     if primary:

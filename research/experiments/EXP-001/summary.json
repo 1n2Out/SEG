@@ -1,0 +1,38 @@
+{
+  "exp": "EXP-001",
+  "title": "Baseline（VM-UNet，预训练初始化）",
+  "run_dir": "brats2020_1102_1734",
+  "collected_at": "2026-11-12T21:45:38+08:00",
+  "git": null,
+  "config": {
+    "epochs": 100,
+    "batch_size": 16,
+    "learning_rate": 0.0001,
+    "pretrained": "vmamba_small_e238_ema.pth",
+    "warm_start": null,
+    "extension": {}
+  },
+  "epochs_completed": 100,
+  "train_hours": 11.15,
+  "parameters": 27429172,
+  "selected_epoch": 55,
+  "selection": "best",
+  "val": {
+    "mean_dice": 0.8178402551107057,
+    "mean_hd95_mm": 21.020344392043086,
+    "WT": {
+      "dice": 0.9027114008546385,
+      "hd95_mm": 12.237038818065193
+    },
+    "TC": {
+      "dice": 0.8136115735764277,
+      "hd95_mm": 11.924302654994412
+    },
+    "ET": {
+      "dice": 0.7371977909010508,
+      "hd95_mm": 38.89969170306965
+    },
+    "et_empty_false_positive": "2/5",
+    "et_nonempty_dice": 0.750917569991156
+  }
+}

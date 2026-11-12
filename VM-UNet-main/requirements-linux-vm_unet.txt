@@ -1,5 +1,5 @@
 # Verified on this Linux host with Python 3.8.20 (2026-11-02).
-# Configure the existing CUDA/PyTorch/Mamba stack first; see BRATS2020.md.
+# Configure the existing CUDA/PyTorch/Mamba stack first; see ../docs/env.md.
 # This file also preserves compatibility with the existing TensorFlow 2.13.1.
 -r requirements-dev.txt
 numpy==1.24.3

@@ -9,6 +9,15 @@ import pytest
 import run_brats
 from train_brats import SOURCE, load_training_config
 
+CLEAN = {"commit": "a" * 40, "branch": "main", "dirty": False, "changes": []}
+
+
+@pytest.fixture(autouse=True)
+def clean_checkout(monkeypatch):
+    # Launcher tests must not depend on the state of the real repository.
+    monkeypatch.setattr(run_brats, "git_state", lambda _: dict(CLEAN))
+    monkeypatch.setattr(run_brats, "code_changes_since", lambda _, commit: [])
+
 
 @pytest.fixture
 def config_path(tmp_path):
@@ -338,3 +347,79 @@ def test_resume_and_evaluation_do_not_require_original_pretraining_file(config_p
         plan['manifest'].touch()
         plan['cache_dir'].mkdir(exist_ok=True)
         run_brats.check_inputs(plan)
+
+
+def test_cli_gpus_override_launch_setting_without_changing_config(config_path):
+    plan = run_brats.make_plan("train", config_path, gpus=[3])
+    assert "torch.distributed.run" not in plan["command"]
+    assert plan["environment"]["CUDA_VISIBLE_DEVICES"] == "3"
+    assert run_brats.make_plan("train", config_path)["environment"]["CUDA_VISIBLE_DEVICES"] == "0,1"
+    assert run_brats.parse_gpus("0,1") == [0, 1]
+    with pytest.raises(ValueError, match="--gpus"):
+        run_brats.make_plan("train", config_path, gpus=[1, 1])
+    with pytest.raises(Exception, match="--gpus"):
+        run_brats.parse_gpus("a")
+
+
+def write_run_git(run_dir, commit):
+    run_dir.mkdir(parents=True, exist_ok=True)
+    record = {} if commit is None else {"git": {"commit": commit}}
+    (run_dir / "run.json").write_text(json.dumps(record), encoding="utf-8")
+
+
+def test_formal_training_requires_clean_checkout(config_path, monkeypatch):
+    plan = run_brats.make_plan("train", config_path)
+    assert run_brats.provenance_problems(plan) == ([], [])
+    # Uncommitted reports/STATE edits elsewhere in the repository do not block a launch.
+    docs_only = {**CLEAN, "dirty": True, "changes": [" M STATE.md"]}
+    monkeypatch.setattr(run_brats, "git_state", lambda _: docs_only)
+    assert run_brats.provenance_problems(plan) == ([], [])
+    monkeypatch.setattr(run_brats, "code_changes_since", lambda _, commit: ["VM-UNet-main/train_brats.py"])
+    errors, _ = run_brats.provenance_problems(plan)
+    assert "Uncommitted code changes" in errors[0] and "train_brats.py" in errors[0]
+    assert run_brats.provenance_problems(plan, allow_dirty=True) == ([], [])
+    monkeypatch.setattr(run_brats, "git_state", lambda _: None)
+    assert "unavailable" in run_brats.provenance_problems(plan)[0][0]
+    monkeypatch.setattr(run_brats, "git_state", lambda _: dict(CLEAN))
+    monkeypatch.setattr(run_brats, "code_changes_since", lambda _, commit: None)
+    assert "unavailable" in run_brats.provenance_problems(plan)[0][0]
+    smoke = run_brats.make_plan("smoke", config_path)
+    assert run_brats.provenance_problems(smoke) == ([], [])
+
+
+def test_resume_and_test_check_code_changes_and_test_confirmation(config_path, monkeypatch):
+    run = run_brats.make_plan("train", config_path)["work_dir"]
+    resume = run_brats.make_plan("resume", config_path, run)
+    test = run_brats.make_plan("test", config_path, run)
+    write_run_git(run, None)
+    errors, warnings = run_brats.provenance_problems(resume)
+    assert errors == [] and "no recorded git commit" in warnings[0]
+    # A different HEAD alone (e.g. newer reports) is accepted when no code changed.
+    write_run_git(run, "b" * 40)
+    assert run_brats.provenance_problems(resume) == ([], [])
+    changed = [f"VM-UNet-main/m{index}.py" for index in range(25)]
+    monkeypatch.setattr(run_brats, "code_changes_since", lambda _, commit: changed)
+    errors, _ = run_brats.provenance_problems(resume)
+    assert "--allow-code-change" in errors[0] and "m19.py" in errors[0]
+    assert "m20.py" not in errors[0] and "5 more" in errors[0]
+    monkeypatch.setattr(run_brats, "code_changes_since", lambda _, commit: None)
+    assert "not fetched" in run_brats.provenance_problems(resume)[0][0]
+    assert run_brats.provenance_problems(resume, allow_code_change=True) == ([], [])
+    errors, _ = run_brats.provenance_problems(test, allow_code_change=True)
+    assert len(errors) == 1 and "--confirm-test" in errors[0]
+    assert run_brats.provenance_problems(test, allow_code_change=True, confirm_test=True) == ([], [])
+
+
+def test_launch_refuses_before_any_write_but_dry_run_only_warns(config_path, monkeypatch, capsys):
+    run = run_brats.make_plan("train", config_path)["work_dir"]
+    write_run_git(run, CLEAN["commit"])
+    monkeypatch.setattr(sys, "platform", "linux")
+    monkeypatch.setattr(run_brats, "check_inputs", lambda _: pytest.fail("Must refuse before preflight"))
+    args = ["run_brats.py", "test", "--config", str(config_path), "--run-dir", str(run)]
+    monkeypatch.setattr(sys, "argv", args + ["--dry-run"])
+    run_brats.main()
+    assert "Warning:" in capsys.readouterr().out
+    monkeypatch.setattr(sys, "argv", args)
+    with pytest.raises(SystemExit) as stop:
+        run_brats.main()
+    assert stop.value.code == 1 and "--confirm-test" in capsys.readouterr().err
