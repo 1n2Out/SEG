@@ -1,10 +1,10 @@
 # STATE
 
-覆盖式更新，不超过 40 行。最后更新：2026-11-12，A。
+覆盖式更新，不超过 40 行。最后更新：2026-11-13，B。
 
 ## 协议与基线
 
-- **工作分支：** `main`。你新建 stage 分支后，在这里更新分支名，两端都执行 `git switch` 切过去。
+- **工作分支：** `stage001-detail-fusion-screening`。A 端接手前需切换到此分支。
 - **协议：** [docs/protocol.md](docs/protocol.md)，配置为 `VM-UNet-main/configs/brats2020.json`（预训练初始化、100 轮、单卡 batch 16）。
 - **对照基线：** [EXP-001](research/experiments/EXP-001/report.md)，val Mean Dice 81.78%（第 55 轮）。全部实验见 [总表](research/experiments/index.md)。
 
@@ -12,11 +12,11 @@
 
 | 任务 | 状态 | 负责 | 说明 |
 |---|---|---|---|
-| [TASK-001](handoff/TASK-001-detail-fusion-screening.md) | 待执行 | B | detail_fusion 热启动筛选，对应 EXP-002 到 EXP-005 |
+| [TASK-001](handoff/TASK-001-detail-fusion-screening.md) | 准备中 | B | CPU 检查 43+18 passed，CUDA 6 passed；正在按原清单重建缓存 |
 
 ## 训练中
 
-无。
+尚未启动训练。仅使用 RTX 6000（2、3、4、5），不使用 A100（0、1）。
 
 ## 待用户决定
 
@@ -26,5 +26,5 @@
 
 ## 下一步
 
-- **B：** 首次开工时先核对 [docs/env.md](docs/env.md) 中 B 段的路径，然后执行 TASK-001。
+- **B：** 已核对 [docs/env.md](docs/env.md)；缓存和 CUDA 检查完成后执行四组 smoke，再启动 TASK-001 筛选。
 - **A：** 等待 TASK-001 的回执。空闲时可以在 `analysis/` 中补上 IDEA-001 的标签统计脚本。

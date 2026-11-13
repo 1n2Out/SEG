@@ -36,16 +36,14 @@ python -m pip check
 
 ## B 端：Linux 服务器（GPU）
 
-> 以下路径来自历史记录，B 端首次按新流程开工时请核对并修正本段。
-
 | 项目 | 值 |
 |---|---|
 | 仓库根目录 | `/home/hzh/hwh/Seg`（源码目录为 `Seg/VM-UNet-main`） |
 | 预训练权重 | `/home/hzh/hwh/package/vmamba_small_e238_ema.pth`（配置中写作 `../../package/...`） |
-| Conda 环境 | `vm_unet` |
-| GPU | RTX 6000 Ada；编号按 `CUDA_DEVICE_ORDER=PCI_BUS_ID` |
-| 核心依赖 | Python 3.8.20，Torch 2.0.1+cu118，torchvision 0.15.2，timm 0.4.12，einops 0.8.1，mamba-ssm / causal-conv1d 1.0.1，nibabel 5.2.1 |
-| 数据缓存 | `VM-UNet-main/data/brats2020/cache/`，369 例，约 29.65 GB |
+| Conda 环境 | `vm_unet`；解释器 `/home/hzh/anaconda3/envs/vm_unet/bin/python` |
+| GPU | 6 张：0、1 为 A100 80GB，2、3、4、5 为 RTX 6000 Ada 48GB；编号按 `CUDA_DEVICE_ORDER=PCI_BUS_ID`。用户指定只使用 RTX 6000，不使用 A100 |
+| 核心依赖 | Python 3.8.20，Torch 2.0.1+cu118，torchvision 0.15.2+cu118，timm 0.4.12，einops 0.8.1，mamba-ssm / causal-conv1d 1.0.1，NumPy 1.24.3，SciPy 1.10.1，nibabel 5.2.1，pytest 8.3.5 |
+| 数据缓存 | `VM-UNet-main/data/brats2020/cache/`，按固定清单生成；完整缓存约 30 GB |
 
 - 补齐依赖：先配好 CUDA、PyTorch 和 Mamba 核心栈，再运行 `pip install -r requirements-linux-vm_unet.txt`。这个文件只能补齐依赖，**不能**用来在新服务器上从零装 CUDA 环境。
 - 换服务器时：必须统一 Python、Torch、CUDA 和扩展包的版本并重新验证，缓存要和清单一起迁移。

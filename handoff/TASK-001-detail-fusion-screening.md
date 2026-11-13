@@ -1,6 +1,6 @@
 # TASK-001：detail_fusion 热启动筛选
 
-状态：**待执行** · 想法：[IDEA-001](../research/ideas/IDEA-001-detail-fusion.md) · 发起：A，2026-11-12 · 分支：见 STATE.md
+状态：**执行中** · 想法：[IDEA-001](../research/ideas/IDEA-001-detail-fusion.md) · 发起：A，2026-11-12 · 分支：见 STATE.md
 
 ## 目的
 
@@ -47,6 +47,6 @@ EXP-003（gated）与 EXP-002（对照）在第 10 轮比较。
 
 - **实际提交：**
 - **运行目录：**
-- **异常与修复：**
+- **异常与修复：** 缓存缺失，按原清单重建；`vm_unet` 下指定 CPU 检查 43 passed、shallow 补充 18 passed、CUDA 6 passed。仅 RTX 6000。
 - **结论：**
 - **建议：**
