@@ -1,0 +1,49 @@
+{
+  "exp": "EXP-004",
+  "title": "筛选：detail concat",
+  "run_dir": "screening_detail_concat_1113_1036",
+  "collected_at": "2026-11-13T14:35:42+08:00",
+  "git": {
+    "commit": "b448503bd5894f28e6f999abcb9eacc6ff6cdfd6",
+    "branch": "stage001-detail-fusion-screening",
+    "dirty": false,
+    "changes": []
+  },
+  "config": {
+    "epochs": 10,
+    "batch_size": 16,
+    "learning_rate": 1e-05,
+    "pretrained": null,
+    "warm_start": "/home/hzh/hwh/Seg/VM-UNet-main/results/brats2020_1102_1734/best.pth",
+    "extension": {
+      "detail_fusion": {
+        "mode": "concat",
+        "full_channels": 16,
+        "half_channels": 32
+      }
+    }
+  },
+  "epochs_completed": 10,
+  "train_hours": 1.27,
+  "parameters": 27498648,
+  "selected_epoch": 10,
+  "selection": "fixed",
+  "val": {
+    "mean_dice": 0.8209033782797516,
+    "mean_hd95_mm": 20.27297113173972,
+    "WT": {
+      "dice": 0.9076239560089315,
+      "hd95_mm": 10.755869332291642
+    },
+    "TC": {
+      "dice": 0.8112988905906634,
+      "hd95_mm": 10.440939625019285
+    },
+    "ET": {
+      "dice": 0.7437872882396599,
+      "hd95_mm": 39.62210443790823
+    },
+    "et_empty_false_positive": "3/5",
+    "et_nonempty_dice": 0.7781660170636258
+  }
+}

@@ -1,6 +1,6 @@
 # TASK-001：detail_fusion 热启动筛选
 
-状态：**执行中** · 想法：[IDEA-001](../research/ideas/IDEA-001-detail-fusion.md) · 发起：A，2026-11-12 · 分支：见 STATE.md
+状态：**执行完成，待用户裁决** · 想法：[IDEA-001](../research/ideas/IDEA-001-detail-fusion.md) · 发起：A，2026-11-12 · 分支：见 STATE.md
 
 ## 目的
 
@@ -45,8 +45,11 @@ EXP-003（gated）与 EXP-002（对照）在第 10 轮比较。
 
 ## 回执（B 填写）
 
-- **实际提交：**
-- **运行目录：**
-- **异常与修复：** 缓存缺失，按原清单重建；`vm_unet` 下指定 CPU 检查 43 passed、shallow 补充 18 passed、CUDA 6 passed。仅 RTX 6000。
-- **结论：**
-- **建议：**
+- **实际提交：** 训练源码提交 `b448503bd5894f28e6f999abcb9eacc6ff6cdfd6`；本任务未修改模型、损失或实验协议。
+- **运行目录：** EXP-002：`results/screening_baseline_1113_1036`，GPU 2，PID 1361389。
+  EXP-003：`results/screening_detail_gated_1113_1036`，GPU 3，PID 1361616。
+  EXP-004：`results/screening_detail_concat_1113_1036`，GPU 5，PID 1362311。
+  EXP-005：`results/screening_shallow_gated_1113_1147`，GPU 2，PID 1555645；已由队列接续完成。
+- **异常与修复：** 缓存缺失，按原清单重建 369 例；`vm_unet` 下指定 CPU 检查 43 passed、shallow 补充 18 passed、CUDA 6 passed。只使用 RTX 6000。
+- **结论：** 四组 10 轮训练与验证、固定第 10 轮收集和五组配对分析均完成；gated 相对热启动对照通过四项筛选标准。数值及限制见 [EXP-003 报告](../research/experiments/EXP-003/report.md)。
+- **建议：** 用户批准后由 A 发起 gated 完整训练，并保留 concat 对照；门控独立收益未证实。筛选结果、报告和分析脚本随本轮阶段分支交付。

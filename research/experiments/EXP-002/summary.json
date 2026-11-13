@@ -1,0 +1,43 @@
+{
+  "exp": "EXP-002",
+  "title": "筛选：baseline 热启动对照",
+  "run_dir": "screening_baseline_1113_1036",
+  "collected_at": "2026-11-13T14:35:42+08:00",
+  "git": {
+    "commit": "b448503bd5894f28e6f999abcb9eacc6ff6cdfd6",
+    "branch": "stage001-detail-fusion-screening",
+    "dirty": false,
+    "changes": []
+  },
+  "config": {
+    "epochs": 10,
+    "batch_size": 16,
+    "learning_rate": 1e-05,
+    "pretrained": null,
+    "warm_start": "/home/hzh/hwh/Seg/VM-UNet-main/results/brats2020_1102_1734/best.pth",
+    "extension": {}
+  },
+  "epochs_completed": 10,
+  "train_hours": 1.11,
+  "parameters": 27429172,
+  "selected_epoch": 10,
+  "selection": "fixed",
+  "val": {
+    "mean_dice": 0.8120072861755042,
+    "mean_hd95_mm": 21.61002918719411,
+    "WT": {
+      "dice": 0.9034360590122582,
+      "hd95_mm": 11.634575108562448
+    },
+    "TC": {
+      "dice": 0.8092905401091992,
+      "hd95_mm": 11.680298824876367
+    },
+    "ET": {
+      "dice": 0.7232952594050553,
+      "hd95_mm": 41.51521362814352
+    },
+    "et_empty_false_positive": "3/5",
+    "et_nonempty_dice": 0.7556247853455612
+  }
+}
