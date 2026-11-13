@@ -4,8 +4,8 @@
 
 ## 协议与基线
 
-- **工作分支：** `stage001-detail-fusion-screening`。A 端接手前需切换到此分支。
-- **用户要求：** 仅在用户明确要求时提交和推送。仅使用 RTX 6000，不使用 A100。
+- **工作分支：** `main`。TASK-001 阶段分支已合并，A 端接手时切换到 `main`。
+- **用户要求：** 仅在用户明确要求时提交和推送；本轮由用户手动推送。仅使用 RTX 6000，不使用 A100。
 - **协议：** [docs/protocol.md](docs/protocol.md)，配置为 `VM-UNet-main/configs/brats2020.json`（预训练初始化、100 轮、单卡 batch 16）。
 - **对照基线：** [EXP-001](research/experiments/EXP-001/report.md)，val Mean Dice 81.78%（第 55 轮）。全部实验见 [总表](research/experiments/index.md)。
 
