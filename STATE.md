@@ -4,7 +4,7 @@
 
 ## 协议与基线
 
-- **工作分支：** `stage002-detail-gated-full-training`，由本地 `main` 创建；TASK-001 已合并到 `main`。
+- **工作分支：** `main`。两轮阶段成果均已合并到本地主分支，后续任务从 `main` 新建分支。
 - **用户要求：** 暂不推送；仅在用户明确要求时提交和推送。使用 `vm_unet` 和 RTX 6000，不使用 A100。
 - **协议：** [docs/protocol.md](docs/protocol.md)，配置为 `VM-UNet-main/configs/brats2020.json`（预训练初始化、100 轮、单卡 batch 16）。
 - **对照基线：** [EXP-001](research/experiments/EXP-001/report.md)，val Mean Dice 81.78%（第 55 轮）。全部实验见 [总表](research/experiments/index.md)。
@@ -19,7 +19,7 @@
 
 ## 训练中
 
-无进行中任务或训练。文档交付已完成，任务单已归档；本轮改动未提交或推送。
+无进行中任务或训练。文档与分析交付已提交并合并到本地 `main`，任务单已归档；暂未推送远端。
 
 ## 后续研究待决（不属于本轮未完成项）
 
