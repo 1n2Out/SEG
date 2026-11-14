@@ -1,4 +1,8 @@
-"""Memory-mapped axial slices. All slices, including tumor-negative ones, remain."""
+"""Memory-mapped axial slices. All slices, including tumor-negative ones, remain.
+
+By default a sample is one axial slice. A method may also read k neighbouring
+slices per side (context_slices); they are stacked after the current slice.
+"""
 from pathlib import Path
 
 import numpy as np
@@ -14,11 +18,31 @@ def padding(shape, input_size):
     return tuple(((input_size - s) // 2, input_size - s - (input_size - s) // 2) for s in shape)
 
 
+def context_offsets(context_slices):
+    """Channel-block order of the stacked slices: current, -1, +1, -2, +2, ..."""
+    if type(context_slices) is not int or context_slices < 0:
+        raise ValueError("context_slices must be a nonnegative integer")
+    offsets = [0]
+    for distance in range(1, context_slices + 1):
+        offsets += [-distance, distance]
+    return offsets
+
+
+def stack_slices(volume, indices, context_slices):
+    """Z,C,X,Y volume -> N,C*(2k+1),X,Y float32. Neighbours outside the volume repeat its edge slice."""
+    depth = volume.shape[0]
+    offsets = context_offsets(context_slices)
+    return np.stack([np.concatenate([np.asarray(volume[min(max(z + offset, 0), depth - 1)], dtype=np.float32)
+                                     for offset in offsets]) for z in indices])
+
+
 class BraTSSlices(Dataset):
-    def __init__(self, manifest, cache_dir, split="train", input_size=256, augment=True):
+    def __init__(self, manifest, cache_dir, split="train", input_size=256, augment=True, context_slices=0):
         if split not in ("train", "val", "test"):
             raise ValueError("Supervised slices require an internal labeled split")
+        context_offsets(context_slices)
         self.cache_dir, self.input_size = Path(cache_dir), input_size
+        self.context_slices = context_slices
         self.augment = augment and split == "train"
         self.index = []
         self.maps = {}
@@ -40,7 +64,8 @@ class BraTSSlices(Dataset):
             self.maps[case_id] = (np.load(directory / "image.npy", mmap_mode="r"),
                                   np.load(directory / "label.npy", mmap_mode="r"))
         images, labels = self.maps[case_id]
-        image = np.array(images[z], dtype=np.float32)
+        image = (np.array(images[z], dtype=np.float32) if not self.context_slices
+                 else stack_slices(images, [z], self.context_slices)[0])
         label = np.array(labels[z], dtype=np.int64)
         label[label == 4] = 3
         if self.augment:

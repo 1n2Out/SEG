@@ -7,13 +7,17 @@ import torch
 from torch.cuda.amp import autocast
 
 from .data import check_cache, save_prediction, write_json
-from .dataset import padding
+from .dataset import padding, stack_slices
 from .metrics import METRICS, REGIONS, evaluate_regions, summarize
 
 
 @torch.no_grad()
-def predict_volume(model, images, device, input_size=256, batch_size=8, amp=False):
-    """Z,C,X,Y -> original-label X,Y,Z. Includes every axial slice."""
+def predict_volume(model, images, device, input_size=256, batch_size=8, amp=False, context_slices=0):
+    """Z,C,X,Y -> original-label X,Y,Z. Includes every axial slice.
+
+    context_slices must match training: each input then stacks the current slice
+    and its neighbours exactly as BraTSSlices does.
+    """
     model.eval()
     z_count, channels, x, y = images.shape
     if channels != 4 or batch_size < 1:
@@ -21,7 +25,8 @@ def predict_volume(model, images, device, input_size=256, batch_size=8, amp=Fals
     pads = padding((x, y), input_size)
     prediction = np.empty((z_count, x, y), dtype=np.uint8)
     for start in range(0, z_count, batch_size):
-        batch = np.array(images[start:start + batch_size], dtype=np.float32)
+        batch = (np.array(images[start:start + batch_size], dtype=np.float32) if not context_slices
+                 else stack_slices(images, range(start, min(start + batch_size, z_count)), context_slices))
         batch = np.pad(batch, ((0, 0), (0, 0)) + pads)
         batch = torch.from_numpy(batch).to(device)
         with autocast(enabled=amp):
@@ -36,7 +41,7 @@ def predict_volume(model, images, device, input_size=256, batch_size=8, amp=Fals
 
 
 def evaluate(model, manifest, cache_dir, split, device, config,
-             output_dir, save_predictions=False, limit=None):
+             output_dir, save_predictions=False, limit=None, context_slices=0):
     if split not in ("val", "test", "official_val"):
         raise ValueError("Evaluation split must be val, test, or official_val")
     ids = manifest["splits"][split]
@@ -60,7 +65,7 @@ def evaluate(model, manifest, cache_dir, split, device, config,
             torch.cuda.synchronize(device)
         start = time.perf_counter()
         prediction = predict_volume(model, images, device, config["input_size"],
-                                    config["inference_batch_size"], config["amp"])
+                                    config["inference_batch_size"], config["amp"], context_slices)
         if device.type == "cuda":
             torch.cuda.synchronize(device)
         timings.append(time.perf_counter() - start)

@@ -128,3 +128,50 @@ def test_warm_start_reproduces_source_model_and_groups_learning_rates(tmp_path):
     image = torch.randn(2, 4, 64, 64, device="cuda")
     with torch.no_grad(), torch.cuda.amp.autocast():
         torch.testing.assert_close(model(image), source(image), atol=0, rtol=0)
+
+
+def test_stacking_on_a_trained_gated_model_starts_at_its_output_then_learns(tmp_path):
+    from train_brats import (SOURCE, apply_warm_start, build_criterion, build_model,
+                             new_parameter_prefixes, optimizer_parameter_groups, save_checkpoint)
+    config = json.loads((SOURCE / "configs/brats2020.json").read_text())
+    gated = {**config, "pretrained": None, "detail_fusion": {"mode": "gated"}}
+    torch.manual_seed(1)
+    source = build_model(gated)
+    with torch.no_grad():  # a trained-like source: the detail head is no longer zero
+        for parameter in source.parameters():
+            parameter.add_(0.01 * torch.randn_like(parameter))
+    path = tmp_path / "best.pth"
+    save_checkpoint(path, {"model_state_dict": source.state_dict(), "manifest_sha256": "split", "epoch": 95})
+    new = ["detail_fusion.boundary_head.", "detail_fusion.context."]
+    stacked = {**config, "pretrained": None,
+               "detail_fusion": {"mode": "gated", "boundary_weight": 0.5, "context_slices": 1},
+               "warm_start": {"checkpoint": str(path), "new_parameter_lr": 1e-4, "new_parameters": new}}
+    torch.manual_seed(2)
+    model = build_model(stacked)
+    report = apply_warm_start(model, stacked["warm_start"], "split", new_parameter_prefixes(stacked))
+    assert report["new_tensors"] and all(name.startswith(tuple(new)) for name in report["new_tensors"])
+    groups = optimizer_parameter_groups(model, stacked)
+    assert sum(p.numel() for p in groups[1]["params"]) == 75105 - 70462
+    source.cuda().eval()
+    model.cuda().eval()
+    image = torch.randn(2, 12, 64, 64, device="cuda")  # current slice first, then its neighbours
+    with torch.no_grad(), torch.cuda.amp.autocast():
+        torch.testing.assert_close(model(image), source(image[:, :4]), atol=0, rtol=0)
+    model.train()
+    target = labels()
+    criterion = build_criterion(stacked)
+    optimizer = torch.optim.AdamW(groups, lr=1e-5)
+    scaler = torch.cuda.amp.GradScaler()
+    branch = model.detail_fusion
+    for step in range(2):
+        optimizer.zero_grad(set_to_none=True)
+        with torch.cuda.amp.autocast():
+            loss = criterion(model(image), target)
+        scaler.scale(loss).backward()
+        scaler.unscale_(optimizer)
+        assert all(p.grad is not None and torch.isfinite(p.grad).all() for p in model.parameters())
+        assert branch.boundary_head.weight.grad.abs().sum() > 0
+        assert branch.context.project.weight.grad.abs().sum() > 0
+        assert (branch.context.block.body[0].weight.grad.abs().sum() > 0) == (step == 1)
+        scaler.step(optimizer)
+        scaler.update()

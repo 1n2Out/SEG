@@ -28,7 +28,43 @@ def test_warm_start_replaces_pretrained_initialization():
         warm_start_settings({"pretrained": "weights.pth", "warm_start": {"checkpoint": "best.pth"}})
     assert warm_start_settings({"pretrained": "weights.pth"}) is None
     assert warm_start_settings({"pretrained": None, "warm_start": {"checkpoint": "best.pth"}}) == {
-        "checkpoint": "best.pth", "new_parameter_lr": None}
+        "checkpoint": "best.pth", "new_parameter_lr": None, "new_parameters": None}
+
+
+@pytest.mark.parametrize("declared", ["detail_fusion.context.", [3], [""], ["detail_fusion.context"],
+                                      ["vmunet."], ["detail_fusion.context.", "detail_fusion.context."]])
+def test_declared_new_parameters_must_be_extension_prefixes(declared):
+    config = {"pretrained": None, "detail_fusion": {"mode": "gated", "context_slices": 1},
+              "warm_start": {"checkpoint": "best.pth", "new_parameters": declared}}
+    with pytest.raises(ValueError, match="new_parameters"):
+        warm_start_settings(config)
+    # Without an extension only an empty declaration is meaningful.
+    with pytest.raises(ValueError, match="new_parameters"):
+        warm_start_settings({"pretrained": None, "warm_start": {"checkpoint": "b", "new_parameters": ["x."]}})
+
+
+STACK = {"control": [], "boundary": ["detail_fusion.boundary_head."], "context": ["detail_fusion.context."],
+         "boundary-context": ["detail_fusion.boundary_head.", "detail_fusion.context."]}
+
+
+def test_stacking_screening_starts_from_exp006_and_differs_only_by_options():
+    reference = screening_config("detail_gated")
+    for name, new in STACK.items():
+        path = SOURCE / "configs/screening" / ("stack-" + name + ".json")
+        validate_config(load_training_config(path))
+        config = json.loads(path.read_text(encoding="utf-8"))
+        assert config["launch"].pop("work_dir") == "results/screening-stack-" + name
+        assert config.pop("warm_start") == {"checkpoint": "results/brats2020_detail_gated_1113_1530/best.pth",
+                                            "new_parameter_lr": 0.0001, "new_parameters": new}
+        options = {key: value for key, value in config.pop("detail_fusion").items()
+                   if key not in ("mode", "full_channels", "half_channels")}
+        assert options == {**({"boundary_weight": 0.5} if "boundary" in name else {}),
+                           **({"context_slices": 1} if "context" in name else {})}
+        expected = json.loads(json.dumps(reference))
+        for key in ("warm_start", "detail_fusion"):
+            expected.pop(key)
+        expected["launch"].pop("work_dir")
+        assert config == expected  # same 10-epoch protocol as the IDEA-001 screening
 
 
 def test_screening_configs_share_one_protocol_and_differ_only_by_extension():
@@ -177,3 +213,43 @@ def test_relative_warm_start_path_starts_at_source_directory():
     assert plan["warm_start_path"] == (SOURCE / "results/brats2020_1102_1734/best.pth").resolve()
     formal = run_brats.make_plan("train", SOURCE / "configs/detail_fusion/gated.json")
     assert formal["warm_start_path"] is None and formal["pretrained_path"] is not None
+
+
+class Stacked(Extended):
+    """A trained extension plus an option sub-module, as when stacking on EXP-006."""
+
+    def __init__(self):
+        super().__init__()
+        self.detail_fusion = torch.nn.ModuleDict({"base": torch.nn.Linear(2, 2), "context": torch.nn.Linear(2, 2)})
+
+
+def test_stacking_loads_the_trained_extension_and_keeps_only_declared_parts_new(tmp_path):
+    torch.manual_seed(3)
+    source = Stacked()
+    del source.detail_fusion["context"]  # the source has the extension but not the option
+    settings = write_source(tmp_path / "exp006.pth", source.state_dict())
+    model = Stacked()
+    initial = model.detail_fusion["context"].weight.detach().clone()
+    report = apply_warm_start(model, settings, "split-a", ("detail_fusion.context.",))
+    assert report["new_tensors"] == ["detail_fusion.context.bias", "detail_fusion.context.weight"]
+    assert torch.equal(model.detail_fusion["base"].weight, source.detail_fusion["base"].weight)
+    assert torch.equal(model.detail_fusion["context"].weight, initial)
+    with pytest.raises(ValueError, match="lacks original"):  # the trained part may not stay new
+        apply_warm_start(Stacked(), settings, "split-a", ())
+    with pytest.raises(ValueError, match="already contains tensors declared new"):
+        apply_warm_start(Stacked(), settings, "split-a", ("detail_fusion.",))
+
+
+def test_declared_new_parameters_alone_get_the_new_learning_rate():
+    model = Stacked()
+    config = {"pretrained": None, "detail_fusion": {"mode": "gated", "context_slices": 1},
+              "warm_start": {"checkpoint": "best.pth", "new_parameter_lr": 1e-4,
+                             "new_parameters": ["detail_fusion.context."]}}
+    original, new = optimizer_parameter_groups(model, config)
+    assert new["params"] == [model.detail_fusion["context"].weight, model.detail_fusion["context"].bias]
+    assert any(p is model.detail_fusion["base"].weight for p in original["params"])
+    control = {**config, "warm_start": {**config["warm_start"], "new_parameters": []}}
+    assert optimizer_parameter_groups(model, control) is None  # the control fine-tunes everything at 1e-5
+    typo = {**config, "warm_start": {**config["warm_start"], "new_parameters": ["detail_fusion.contxt."]}}
+    with pytest.raises(ValueError, match="added no parameters"):
+        optimizer_parameter_groups(model, typo)

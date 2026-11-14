@@ -54,7 +54,7 @@ def load_checkpoint(path):
 # Optional model extensions; each is a VMUNet subclass whose new parameters live
 # under the attribute of the same name. At most one is configured per run.
 EXTENSIONS = ("shallow_refinement", "detail_fusion")
-WARM_START_DEFAULTS = {"checkpoint": None, "new_parameter_lr": None}
+WARM_START_DEFAULTS = {"checkpoint": None, "new_parameter_lr": None, "new_parameters": None}
 
 
 def innovation_settings(config):
@@ -83,6 +83,26 @@ def extension_prefixes(config):
     return (extension[0] + ".",)
 
 
+def input_context(config):
+    """Neighbouring slices per side that the configured model reads (0: current slice only)."""
+    extension = innovation_settings(config)
+    if extension is None or extension[0] != "detail_fusion":
+        return 0
+    return extension[1]["context_slices"]
+
+
+def new_parameter_prefixes(config):
+    """Prefixes of tensors absent from the warm-start source.
+
+    warm_start.new_parameters declares them explicitly (stacking on a source that
+    already has the extension); otherwise the whole active extension is new.
+    """
+    settings = config.get("warm_start")
+    if settings is not None and settings.get("new_parameters") is not None:
+        return tuple(settings["new_parameters"])
+    return extension_prefixes(config)
+
+
 def warm_start_settings(config):
     """Screening-only initialization of the full model from an earlier run.
 
@@ -105,6 +125,14 @@ def warm_start_settings(config):
     if rate is not None and (isinstance(rate, bool) or not isinstance(rate, (int, float))
                              or not math.isfinite(rate) or rate <= 0):
         raise ValueError("warm_start.new_parameter_lr must be null or a positive finite number")
+    declared = resolved["new_parameters"]
+    if declared is not None:
+        allowed = extension_prefixes(config)
+        if (not isinstance(declared, list) or len(set(declared)) != len(declared)
+                or any(not isinstance(item, str) or not item.endswith(".")
+                       or not item.startswith(allowed) for item in declared)):
+            raise ValueError("warm_start.new_parameters must be null or a list of distinct state-dict "
+                             "prefixes ending in a dot inside the active extension")
     if config.get("pretrained") is not None:
         raise ValueError("warm_start replaces pretrained initialization; set pretrained to null")
     return resolved
@@ -131,8 +159,12 @@ def build_model(config):
 
 
 def build_criterion(config):
-    innovation_settings(config)
-    # All current experiments optimize exactly the original CE + regional Dice.
+    extension = innovation_settings(config)
+    # Every run optimizes the original CE + regional Dice; only the detail-fusion
+    # boundary option adds an auxiliary term on its own training output.
+    if extension is not None and extension[0] == "detail_fusion" and extension[1]["boundary_weight"] > 0:
+        from brats.innovations.detail_fusion.loss import BoundaryAuxLoss
+        return BoundaryAuxLoss(extension[1]["boundary_weight"])
     from brats.losses import BraTSCEDiceLoss
     return BraTSCEDiceLoss()
 
@@ -186,10 +218,11 @@ def resolve_warm_start_path(settings):
 
 
 def apply_warm_start(model, settings, manifest_sha256, new_prefixes=()):
-    """Load an earlier run's complete model; only extension tensors may stay new.
+    """Load an earlier run's complete model; only the declared new tensors may stay new.
 
     The source must use the same patient split. Unexpected or reshaped tensors,
-    and missing tensors outside the extension prefixes, are errors.
+    missing tensors outside new_prefixes, and source tensors inside new_prefixes
+    are errors, so "new" means exactly "absent from the source".
     """
     path = Path(settings["checkpoint"])
     source = load_checkpoint(path)
@@ -197,6 +230,10 @@ def apply_warm_start(model, settings, manifest_sha256, new_prefixes=()):
         raise ValueError("Warm start requires a training checkpoint containing model_state_dict")
     if source.get("manifest_sha256") != manifest_sha256:
         raise ValueError("Warm-start checkpoint uses a different patient split")
+    present = sorted(key for key in source["model_state_dict"]
+                     if new_prefixes and key.startswith(tuple(new_prefixes)))
+    if present:
+        raise ValueError("Warm-start checkpoint already contains tensors declared new: " + ", ".join(present[:5]))
     result = model.load_state_dict(source["model_state_dict"], strict=False)
     if result.unexpected_keys:
         raise ValueError("Warm-start checkpoint has tensors absent from this model: "
@@ -220,7 +257,7 @@ def apply_warm_start(model, settings, manifest_sha256, new_prefixes=()):
 def optimizer_parameter_groups(model, config):
     """None keeps one parameter group; warm-start screening may give extensions their own LR."""
     settings = config.get("warm_start")
-    prefixes = extension_prefixes(config)
+    prefixes = new_parameter_prefixes(config)
     if settings is None or settings["new_parameter_lr"] is None or not prefixes:
         return None
     named = list(model.named_parameters())
@@ -332,19 +369,21 @@ def run(args, rank=0, world_size=1, local_rank=0):
         model.load_state_dict(checkpoint["model_state_dict"], strict=True)
     elif config.get("warm_start") is not None:
         warm_start_report = apply_warm_start(model, config["warm_start"], manifest["sha256"],
-                                             extension_prefixes(config))
+                                             new_parameter_prefixes(config))
     elif config["pretrained"]:
         pretrained_report = model.load_from()
     model.to(device)
     raw_model = model
     if distributed:
         model = DistributedDataParallel(model, device_ids=[local_rank], output_device=local_rank)
+    context = input_context(config)  # training and every 3D inference must stack slices alike
     if args.mode in ("evaluate", "predict"):
         split = "official_val" if args.mode == "predict" else args.split
         summary = evaluate(model, prediction_manifest if args.mode == "predict" else manifest,
                            args.cache_dir, split, device, config,
                            args.work_dir / ("evaluation_" + split),
-                           save_predictions=args.save_predictions or args.mode == "predict")
+                           save_predictions=args.save_predictions or args.mode == "predict",
+                           context_slices=context)
         summary["checkpoint"] = str(args.checkpoint.resolve())
         summary["checkpoint_epoch"] = checkpoint["epoch"]
         summary["training_manifest_sha256"] = manifest["sha256"]
@@ -352,7 +391,7 @@ def run(args, rank=0, world_size=1, local_rank=0):
         write_json(args.work_dir / ("evaluation_" + split) / "summary.json", summary)
         print(json.dumps(summary, indent=2))
         return
-    dataset = BraTSSlices(manifest, args.cache_dir, "train", config["input_size"])
+    dataset = BraTSSlices(manifest, args.cache_dir, "train", config["input_size"], context_slices=context)
     generator = torch.Generator().manual_seed(seed)
     # Padding at most world_size-1 slices keeps every rank's step count equal.
     sampler = DistributedSampler(dataset, num_replicas=world_size, rank=rank,
@@ -367,8 +406,9 @@ def run(args, rank=0, world_size=1, local_rank=0):
     if args.mode == "smoke":
         batch = next(iter(loader))
         model.train()
-        logits = model(batch["image"].to(device))
-        loss = criterion(logits, batch["label"].to(device))
+        outputs = model(batch["image"].to(device))
+        loss = criterion(outputs, batch["label"].to(device))
+        logits = outputs[0] if isinstance(outputs, tuple) else outputs
         if not torch.isfinite(loss):
             raise ValueError("Nonfinite smoke loss")
         loss.backward()
@@ -378,7 +418,7 @@ def run(args, rank=0, world_size=1, local_rank=0):
         model.zero_grad(set_to_none=True)
         if primary:
             evaluate(raw_model, manifest, args.cache_dir, "val", device, config,
-                     args.work_dir / "smoke", limit=1)
+                     args.work_dir / "smoke", limit=1, context_slices=context)
         if distributed:
             dist.barrier()
         return
@@ -472,7 +512,8 @@ def run(args, rank=0, world_size=1, local_rank=0):
             if primary:
                 # Bypass the DDP wrapper so other ranks can wait without forward collectives.
                 summary = evaluate(raw_model, manifest, args.cache_dir, "val", device, config,
-                                   args.work_dir / "validation" / f"epoch_{epoch:03d}")
+                                   args.work_dir / "validation" / f"epoch_{epoch:03d}",
+                                   context_slices=context)
                 record["val_mean_dice"] = summary["mean_dice"]
                 record["val_dice"] = {r: summary["regions"][r]["dice"]["mean"] for r in ("WT", "TC", "ET")}
                 early_stopping.update(summary["mean_dice"])

@@ -1,6 +1,6 @@
 # IDEA-001：多分辨率细节回注与语义门控
 
-状态：**已实现** · 方法文档：[detail_fusion](../../docs/methods/detail_fusion.md) · 验证记录：[TASK-001](../../handoff/archive/task-001-detail-fusion-screening.md)、[TASK-002](../../handoff/archive/task-002-detail-gated-full-training.md)
+状态：**已实现** · 角色：叠加基座 · 方法文档：[detail_fusion](../../docs/methods/detail_fusion.md)
 
 ## 动机
 
@@ -41,20 +41,11 @@ baseline 在 val 上的非空 ET Dice 为 75.09%（[EXP-001](../experiments/EXP-
 - **门控：** 沿用 EMCAD（CVPR 2024）的 LGAG。
 - **贡献定位：** 卷积细节支路和门控都是已有组件，不能当作原创贡献。可以讲的是"以量化的 patch 分辨率瓶颈为依据、面向薄层 ET 的改造"。原创性还需要进一步核查文献。
 
-## 验证计划
+## 验证记录
 
-先做热启动筛选（[TASK-001](../../handoff/archive/task-001-detail-fusion-screening.md)），对照组是"不挂模块、同样微调 10 轮"的 baseline。
-
-**通过标准：** gated 相比对照组同时满足：
-- val Mean Dice 至少高 0.5 个百分点；
-- ET Dice 上升；
-- Mean HD95 不变差；
-- 空 ET 假阳性病例数不增加。
-
-0.5 个百分点以内，在 55 例、单 seed 的条件下基本是噪声。
-
-**通过之后：** 按完整协议正式训练 gated。论文中的消融行预设为：baseline、仅 1/4 尺度（IDEA-002）、concat、gated。
+- 热启动筛选（[TASK-001](../../handoff/archive/task-001-detail-fusion-screening.md)）通过，对照为同样微调 10 轮的 baseline。
+- 完整训练（[TASK-002](../../handoff/archive/task-002-detail-gated-full-training.md)）的验证集结果见 EXP-006。
 
 ## 结论
 
-热启动筛选见 [EXP-003](../experiments/EXP-003/report.md)，完整训练的验证集结果见 [EXP-006](../experiments/EXP-006/report.md)。完整训练有验证集收益，门控的独立贡献仍缺少完整 concat 对照；方法采纳与后续研究由用户决定。
+完整训练在验证集上有收益，见 [EXP-006](../experiments/EXP-006/report.md)；门控的独立贡献缺少完整 concat 对照，论文中不单独宣称门控涨点。按 2026-11-14 决定作为叠加基座，叠加件见 [IDEA-005](IDEA-005-boundary-supervision.md)、[IDEA-006](IDEA-006-slice-context.md)。

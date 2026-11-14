@@ -23,7 +23,7 @@ SEG/                          # git 仓库根目录
     ├── analysis/             # 研究分析脚本（必须入库）
     ├── data/brats2020/       # 划分清单、数据审计（入库）；cache/（不入库）
     ├── archives/             # 已退役方案的源码归档
-    ├── tests/                # CPU 测试；*_cuda.py 和 *_distributed.py 需要 B 端执行
+    ├── tests/                # CPU 测试；*_cuda.py 需要 B 端执行，*_distributed.py 需设 BRATS_TEST_DISTRIBUTED=1
     └── results/  logs/       # 运行产物（不入库）
 ```
 
@@ -33,8 +33,10 @@ SEG/                          # git 仓库根目录
 |---|---|
 | 患者清单、缓存、几何检查 | `prepare_brats.py`、`brats/data.py` |
 | 切片读取、增强、损失 | `brats/dataset.py`、`brats/losses.py` |
+| 相邻切片堆叠（训练与三维推理共用） | `brats/dataset.py::stack_slices`；层数由 `train_brats.py::input_context` 从配置读出 |
+| 方法的辅助损失 | `train_brats.py::build_criterion` 分派；训练态模型可返回 `(logits, 辅助输出)`，评价态只返回 logits |
 | 三维推理、指标、预测导出 | `brats/engine.py`、`brats/metrics.py` |
-| 训练循环、DDP、恢复、选 best、热启动 | `train_brats.py`、`brats/training.py` |
+| 训练循环、DDP、恢复、选 best、热启动 | `train_brats.py`、`brats/training.py`；热启动新张量由 `new_parameter_prefixes` 决定 |
 | 启动、GPU 选择、来源检查、测试闸门 | `run_brats.py`、`brats/provenance.py` |
 | 结果收集与总表 | `collect_brats.py` |
 | 输入输出封装、预训练加载 | `models/vmunet/vmunet.py::VMUNet` |
@@ -52,7 +54,8 @@ SEG/                          # git 仓库根目录
 2. **注册。** 在 `train_brats.py` 的 `EXTENSIONS` 和分派函数中注册。配置用一个同名字段开启，`mode: "off"` 等同于 baseline。**一次运行只允许启用一个扩展。**
 3. **不影响 baseline。** 不写扩展字段时，模型构建、初始化、随机数序列和优化器必须与 baseline 完全一致。新模块在主干之后构建，并隔离自己的随机数。
 4. **新分支零初始化，以残差方式接入。** 初始输出要与 baseline 相同，这是能做热启动筛选的前提。参数集合保持固定，保证 DDP 正常工作。
-5. **配套交付。** 包括：正式配置和筛选配置（相对 baseline 只多出模块字段和输出目录）、CPU 测试、CUDA 测试（交给 B 执行）、`docs/methods/<name>.md`。
+5. **叠加在已有扩展上的部件，作为该扩展的选项实现。** 一次运行仍只启用一个扩展。选项部件在共享部分之后构建，默认关闭时模型逐位不变；从已含该扩展的 checkpoint 热启动时，用 `warm_start.new_parameters` 声明新部件。
+6. **配套交付。** 包括：正式配置和筛选配置（相对 baseline 只多出模块字段和输出目录）、CPU 测试、CUDA 测试（交给 B 执行）、`docs/methods/<name>.md`。
 
 ## 修改禁区
 

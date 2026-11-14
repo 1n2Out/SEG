@@ -1,0 +1,57 @@
+{
+  "launch": {
+    "gpus": [
+      2
+    ],
+    "work_dir": "results/screening-stack-boundary",
+    "data_root": "../datasets/BraTS2020",
+    "manifest": "data/brats2020/split_seed42.json",
+    "cache_dir": "data/brats2020/cache",
+    "log_dir": "logs",
+    "save_predictions": true
+  },
+  "input_size": 256,
+  "input_channels": 4,
+  "num_classes": 4,
+  "depths": [
+    2,
+    2,
+    2,
+    2
+  ],
+  "depths_decoder": [
+    2,
+    2,
+    2,
+    1
+  ],
+  "drop_path_rate": 0.2,
+  "seed": 42,
+  "batch_size": 16,
+  "inference_batch_size": 8,
+  "num_workers": 4,
+  "epochs": 10,
+  "learning_rate": 1e-05,
+  "weight_decay": 0.01,
+  "val_interval": 5,
+  "early_stopping": {
+    "enabled": true,
+    "patience": 10,
+    "min_delta": 0.0001
+  },
+  "amp": true,
+  "pretrained": null,
+  "warm_start": {
+    "checkpoint": "results/brats2020_detail_gated_1113_1530/best.pth",
+    "new_parameter_lr": 0.0001,
+    "new_parameters": [
+      "detail_fusion.boundary_head."
+    ]
+  },
+  "detail_fusion": {
+    "mode": "gated",
+    "full_channels": 16,
+    "half_channels": 32,
+    "boundary_weight": 0.5
+  }
+}
