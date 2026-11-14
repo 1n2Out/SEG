@@ -1,6 +1,6 @@
 # EXP-003：detail gated 热启动筛选
 
-任务：[TASK-001](../../../handoff/TASK-001-detail-fusion-screening.md) · 想法：IDEA-001
+任务：[TASK-001](../../../handoff/archive/task-001-detail-fusion-screening.md) · 想法：IDEA-001
 运行目录：`screening_detail_gated_1113_1036` · 提交：`b448503bd5894f28e6f999abcb9eacc6ff6cdfd6`
 
 ## 目的

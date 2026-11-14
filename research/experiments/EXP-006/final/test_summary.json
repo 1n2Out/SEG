@@ -1,0 +1,181 @@
+{
+  "n_patients": 55,
+  "protocol": {
+    "name": "local-brats2020-volume-v1",
+    "regions": {
+      "WT": [
+        1,
+        2,
+        4
+      ],
+      "TC": [
+        1,
+        4
+      ],
+      "ET": [
+        4
+      ]
+    },
+    "aggregation": "per-patient 3D, then unweighted mean across patients",
+    "dice_scale": "0..1",
+    "hd95": "pooled bidirectional 6-connected surface distances in mm",
+    "both_empty": "dice=precision=recall=1; hd95_mm=0",
+    "one_empty": "dice=precision=recall=0; hd95_mm=norm(shape_xyz * spacing_xyz_mm)",
+    "std": "population standard deviation across patients (ddof=0)"
+  },
+  "regions": {
+    "WT": {
+      "dice": {
+        "mean": 0.8904658665834924,
+        "std_patients": 0.081782690401858
+      },
+      "hd95_mm": {
+        "mean": 9.052770172380255,
+        "std_patients": 14.899992572641393
+      },
+      "precision": {
+        "mean": 0.9221837711100552,
+        "std_patients": 0.06862755918195812
+      },
+      "recall": {
+        "mean": 0.8723949142666977,
+        "std_patients": 0.1214996306162168
+      },
+      "specificity": {
+        "mean": 0.9992527365127849,
+        "std_patients": 0.0011120873847639953
+      }
+    },
+    "TC": {
+      "dice": {
+        "mean": 0.8377320501068992,
+        "std_patients": 0.16115057902036384
+      },
+      "hd95_mm": {
+        "mean": 8.940678464459582,
+        "std_patients": 16.220768433838316
+      },
+      "precision": {
+        "mean": 0.8732246271263842,
+        "std_patients": 0.1427418620667368
+      },
+      "recall": {
+        "mean": 0.8274592530858623,
+        "std_patients": 0.18379866343967943
+      },
+      "specificity": {
+        "mean": 0.9995646896846013,
+        "std_patients": 0.0004933259520692503
+      }
+    },
+    "ET": {
+      "dice": {
+        "mean": 0.789871919077602,
+        "std_patients": 0.24013712415600066
+      },
+      "hd95_mm": {
+        "mean": 27.696924340981024,
+        "std_patients": 84.55551346688911
+      },
+      "precision": {
+        "mean": 0.8012502918910961,
+        "std_patients": 0.24089550926051773
+      },
+      "recall": {
+        "mean": 0.8107131417083835,
+        "std_patients": 0.24683322010428704
+      },
+      "specificity": {
+        "mean": 0.9996389984849061,
+        "std_patients": 0.00045401242423021465
+      }
+    }
+  },
+  "mean_dice": 0.8393566119226645,
+  "mean_hd95_mm": 15.230124325940286,
+  "split": "test",
+  "manifest_sha256": "947f8678605903ce2abf686cf93eddfb4a4357d9c6539ddd67f983fddd5d8ca7",
+  "partial_evaluation": false,
+  "model_parameters": 27499634,
+  "device": "cuda:0",
+  "amp": true,
+  "inference_seconds_per_patient": [
+    1.8511382285505533,
+    0.6571577182039618,
+    0.6557741248980165,
+    0.6530580064281821,
+    0.6569035025313497,
+    0.6919052740558982,
+    0.674659963697195,
+    0.6949809761717916,
+    0.6559279458597302,
+    0.6939587937667966,
+    0.6533086989074945,
+    0.6667040400207043,
+    0.6401793072000146,
+    0.6838327264413238,
+    0.6420374708250165,
+    0.6599418809637427,
+    0.6184014277532697,
+    0.7059721946716309,
+    0.6286120470613241,
+    0.6722388053312898,
+    0.6469063423573971,
+    0.6712056919932365,
+    0.6426510186865926,
+    0.6265139104798436,
+    0.6068183770403266,
+    0.6872251238673925,
+    0.6351336073130369,
+    0.6524348566308618,
+    0.6196051882579923,
+    0.7015439234673977,
+    0.6707192799076438,
+    0.6897548036649823,
+    0.6631950354203582,
+    0.6517975172027946,
+    0.6439194427803159,
+    0.6096477210521698,
+    0.6462143156677485,
+    0.6508724605664611,
+    0.6381991328671575,
+    0.6623193742707372,
+    0.7115745674818754,
+    0.6696367440745234,
+    0.6971336444839835,
+    0.6151573024690151,
+    0.6694592330604792,
+    0.6926391776651144,
+    0.6594727486371994,
+    0.6623080959543586,
+    0.6542535070329905,
+    0.6368275573477149,
+    0.6257218532264233,
+    0.6753550162538886,
+    0.6784088090062141,
+    0.6403133803978562,
+    0.6998351914808154
+  ],
+  "timing_scope": "cached array access, padding, transfers, forward, argmax and reconstruction; excludes metrics/NIfTI I/O; no warmup",
+  "peak_cuda_allocated_mb": 708.0576171875,
+  "checkpoint": "/home/hzh/hwh/Seg/VM-UNet-main/results/brats2020_detail_gated_1113_1530/best.pth",
+  "checkpoint_epoch": 95,
+  "training_manifest_sha256": "947f8678605903ce2abf686cf93eddfb4a4357d9c6539ddd67f983fddd5d8ca7",
+  "git": {
+    "commit": "4ede60987d3b78367ab5a55b2ebba03ee17db923",
+    "branch": "stage002-detail-gated-full-training",
+    "dirty": true,
+    "changes": [
+      " M STATE.md",
+      " M handoff/TASK-001-detail-fusion-screening.md",
+      " M research/decisions.md",
+      " M research/experiments/index.md",
+      "?? handoff/task-002-detail-gated-full-training.md",
+      "?? handoff/task-003-detail-gated-final.md",
+      "?? research/experiments/EXP-006/config.json",
+      "?? research/experiments/EXP-006/history.jsonl",
+      "?? research/experiments/EXP-006/summary.json",
+      "?? research/experiments/EXP-006/val_per_patient.csv"
+    ]
+  }
+}

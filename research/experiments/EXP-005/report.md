@@ -1,6 +1,6 @@
 # EXP-005：shallow gated 尺度对照
 
-任务：[TASK-001](../../../handoff/TASK-001-detail-fusion-screening.md) · 想法：IDEA-002
+任务：[TASK-001](../../../handoff/archive/task-001-detail-fusion-screening.md) · 想法：IDEA-002
 运行目录：`screening_shallow_gated_1113_1147` · 提交：`b448503bd5894f28e6f999abcb9eacc6ff6cdfd6`
 
 ## 目的

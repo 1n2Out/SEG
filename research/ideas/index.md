@@ -4,7 +4,7 @@
 
 | ID | 名称 | 状态 | 一句话 |
 |---|---|---|---|
-| [IDEA-001](IDEA-001-detail-fusion.md) | 多分辨率细节回注 + 语义门控 | 已实现，待筛选 | 补上 VM-UNet 缺失的 1/2、1/1 尺度，针对薄层 ET |
+| [IDEA-001](IDEA-001-detail-fusion.md) | 多分辨率细节回注 + 语义门控 | 已实现 | 补上 VM-UNet 缺失的 1/2、1/1 尺度，针对薄层 ET |
 | [IDEA-002](IDEA-002-shallow-refinement.md) | 浅层细节回注 | 已实现 | 只在 1/4 尺度补连接，作为 IDEA-001 的对照 |
 | [IDEA-003](IDEA-003-modality-difference.md) | 区域条件的模态差异补偿 | 候选 | 用 T1ce−T1 等模态差异补偿 ET 和 TC |
 | [IDEA-004](IDEA-004-et-postprocess.md) | ET 小体积后处理 | 候选 | 无需训练，减少空 ET 患者被误判出 ET |

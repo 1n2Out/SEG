@@ -1,6 +1,6 @@
 # IDEA-001：多分辨率细节回注与语义门控
 
-状态：**已实现，待筛选** · 方法文档：[detail_fusion](../../docs/methods/detail_fusion.md) · 任务：[TASK-001](../../handoff/TASK-001-detail-fusion-screening.md)
+状态：**已实现** · 方法文档：[detail_fusion](../../docs/methods/detail_fusion.md) · 验证记录：[TASK-001](../../handoff/archive/task-001-detail-fusion-screening.md)、[TASK-002](../../handoff/archive/task-002-detail-gated-full-training.md)
 
 ## 动机
 
@@ -24,7 +24,7 @@ baseline 在 val 上的非空 ET Dice 为 75.09%（[EXP-001](../experiments/EXP-
 
 **推论：** 1/4 分辨率很可能是 ET 的瓶颈。这可以做成论文的动机图。不过模型的输出并不严格按块判类，所以这不是严格意义上的上限。
 
-> **待补：** 上表的统计脚本当时没有入库。进论文之前，要在 `VM-UNet-main/analysis/` 里重写并复核。A 端本地有原始数据，可以直接做。
+> **复现约束：** 上表的来源脚本未入库，不能直接作为论文定量证据；用于论文前需由 A 另行补充脚本并复核，此项不属于已完成的训练与评价任务。
 
 ## 核心思想
 
@@ -43,7 +43,7 @@ baseline 在 val 上的非空 ET Dice 为 75.09%（[EXP-001](../experiments/EXP-
 
 ## 验证计划
 
-先做热启动筛选（[TASK-001](../../handoff/TASK-001-detail-fusion-screening.md)），对照组是"不挂模块、同样微调 10 轮"的 baseline。
+先做热启动筛选（[TASK-001](../../handoff/archive/task-001-detail-fusion-screening.md)），对照组是"不挂模块、同样微调 10 轮"的 baseline。
 
 **通过标准：** gated 相比对照组同时满足：
 - val Mean Dice 至少高 0.5 个百分点；
@@ -57,4 +57,4 @@ baseline 在 val 上的非空 ET Dice 为 75.09%（[EXP-001](../experiments/EXP-
 
 ## 结论
 
-尚未开展实验。
+热启动筛选见 [EXP-003](../experiments/EXP-003/report.md)，完整训练的验证集结果见 [EXP-006](../experiments/EXP-006/report.md)。完整训练有验证集收益，门控的独立贡献仍缺少完整 concat 对照；方法采纳与后续研究由用户决定。

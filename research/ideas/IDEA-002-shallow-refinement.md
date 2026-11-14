@@ -1,6 +1,6 @@
 # IDEA-002：浅层细节回注
 
-状态：**已实现** · 方法文档：[shallow_refinement](../../docs/methods/shallow_refinement.md) · 任务：作为 [TASK-001](../../handoff/TASK-001-detail-fusion-screening.md) 的可选对照
+状态：**已实现** · 方法文档：[shallow_refinement](../../docs/methods/shallow_refinement.md) · 任务：作为 [TASK-001](../../handoff/archive/task-001-detail-fusion-screening.md) 的可选对照
 
 ## 动机
 
@@ -22,4 +22,4 @@
 
 ## 结论
 
-尚未开展实验。
+热启动尺度对照的结果与限制见 [EXP-005](../experiments/EXP-005/report.md)；尚无该方法的完整协议训练结果，方法采纳与后续研究由用户决定。

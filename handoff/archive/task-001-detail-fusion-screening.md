@@ -1,6 +1,6 @@
 # TASK-001：detail_fusion 热启动筛选
 
-状态：**执行完成，待用户裁决** · 想法：[IDEA-001](../research/ideas/IDEA-001-detail-fusion.md) · 发起：A，2026-11-12 · 分支：见 STATE.md
+状态：**关闭（执行完成）** · 想法：[IDEA-001](../../research/ideas/IDEA-001-detail-fusion.md) · 发起：A，2026-11-12 · 后续：[TASK-002](task-002-detail-gated-full-training.md)
 
 ## 目的
 
@@ -8,7 +8,7 @@
 
 ## 运行清单
 
-热启动来源为 EXP-001 的 `results/brats2020_1102_1734/best.pth`，规则见 [protocol](../docs/protocol.md) 中的"热启动筛选"。
+热启动来源为 EXP-001 的 `results/brats2020_1102_1734/best.pth`，规则见 [protocol](../../docs/protocol.md) 中的"热启动筛选"。
 
 | EXP | 配置 | 说明 | 必要性 |
 |---|---|---|---|
@@ -51,5 +51,5 @@ EXP-003（gated）与 EXP-002（对照）在第 10 轮比较。
   EXP-004：`results/screening_detail_concat_1113_1036`，GPU 5，PID 1362311。
   EXP-005：`results/screening_shallow_gated_1113_1147`，GPU 2，PID 1555645；已由队列接续完成。
 - **异常与修复：** 缓存缺失，按原清单重建 369 例；`vm_unet` 下指定 CPU 检查 43 passed、shallow 补充 18 passed、CUDA 6 passed。只使用 RTX 6000。
-- **结论：** 四组 10 轮训练与验证、固定第 10 轮收集和五组配对分析均完成；gated 相对热启动对照通过四项筛选标准。数值及限制见 [EXP-003 报告](../research/experiments/EXP-003/report.md)。
-- **建议：** 用户批准后由 A 发起 gated 完整训练，并保留 concat 对照；门控独立收益未证实。筛选结果、报告和分析脚本随本轮阶段分支交付。
+- **结论：** 四组 10 轮训练与验证、固定第 10 轮收集和五组配对分析均完成；gated 相对热启动对照通过四项筛选标准。数值及限制见 [EXP-003 报告](../../research/experiments/EXP-003/report.md)。
+- **建议：** gated 完整训练已转交 [TASK-002](task-002-detail-gated-full-training.md)；完整 concat 对照仍需用户另行安排，门控独立收益未证实。
