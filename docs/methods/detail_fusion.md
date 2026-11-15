@@ -81,6 +81,6 @@ BRATS_TEST_DISTRIBUTED=1 python -m pytest -q tests/test_detail_fusion_distribute
 
 ## 消融与移除
 
-- **消融行** 按叠加顺序排列：baseline、gated（EXP-006）、gated 加单个选项、gated 加两个选项，运行清单见 [TASK-004](../../handoff/task-004-detail-stacking.md)。
+- **消融行** 按叠加顺序排列：baseline、gated（EXP-006）、gated 加单个选项、gated 加两个选项，运行清单见 [TASK-004](../../handoff/archive/task-004-detail-stacking.md)。
 - **停用** 时改用 baseline 配置即可；停用某个选项时把它设回默认值。
 - **彻底移除** 时，删除模块目录、相关配置、专用测试，以及 `train_brats.py` 里的分派分支、`input_context` 和边界损失分派，同时删除本文。相邻切片堆叠函数属于数据层，没有方法使用时可一并删除。

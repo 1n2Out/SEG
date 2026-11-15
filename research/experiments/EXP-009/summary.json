@@ -1,0 +1,51 @@
+{
+  "exp": "EXP-009",
+  "title": "细节回注叠加筛选：相邻切片",
+  "run_dir": "screening-stack-context_1114_1954",
+  "collected_at": "2026-11-15T14:49:24+08:00",
+  "git": {
+    "commit": "18498f9b7e333c7dd8e1fb7b15f6a19873160fb3",
+    "branch": "stage003-detail-stacking",
+    "dirty": false,
+    "changes": []
+  },
+  "config": {
+    "epochs": 10,
+    "batch_size": 16,
+    "learning_rate": 1e-05,
+    "pretrained": null,
+    "warm_start": "/home/hzh/hwh/Seg/VM-UNet-main/results/brats2020_detail_gated_1113_1530/best.pth",
+    "extension": {
+      "detail_fusion": {
+        "mode": "gated",
+        "full_channels": 16,
+        "half_channels": 32,
+        "boundary_weight": 0.0,
+        "context_slices": 1
+      }
+    }
+  },
+  "epochs_completed": 10,
+  "train_hours": 1.4,
+  "parameters": 27504226,
+  "selected_epoch": 10,
+  "selection": "fixed",
+  "val": {
+    "mean_dice": 0.8305262997449848,
+    "mean_hd95_mm": 18.839314633743417,
+    "WT": {
+      "dice": 0.9107062851412299,
+      "hd95_mm": 10.042030509682025
+    },
+    "TC": {
+      "dice": 0.8221676366958617,
+      "hd95_mm": 11.83234335646594
+    },
+    "ET": {
+      "dice": 0.758704977397863,
+      "hd95_mm": 34.643570035082284
+    },
+    "et_empty_false_positive": "2/5",
+    "et_nonempty_dice": 0.7745754751376497
+  }
+}

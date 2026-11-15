@@ -1,6 +1,6 @@
 # IDEA-006：细节支路读取相邻切片
 
-状态：**已实现** · 方法文档：[detail_fusion](../../docs/methods/detail_fusion.md)（选项 `context_slices`） · 任务：[TASK-004](../../handoff/task-004-detail-stacking.md) · 决定：[decisions](../decisions.md) 2026-11-14
+状态：**已实现** · 方法文档：[detail_fusion](../../docs/methods/detail_fusion.md)（选项 `context_slices`） · 任务：[TASK-004](../../handoff/archive/task-004-detail-stacking.md) · 决定：[decisions](../decisions.md) 2026-11-14
 
 ## 动机
 
@@ -27,8 +27,8 @@
 ## 验证计划
 
 - **对照组：** 从 EXP-006 best 出发、不加新部件、同样微调 10 轮。
-- **通过标准与决策：** 见 [TASK-004](../../handoff/task-004-detail-stacking.md)。
+- **通过标准与决策：** 见 [TASK-004](../../handoff/archive/task-004-detail-stacking.md)。
 
 ## 结论
 
-尚未开展实验。
+热启动筛选未通过，单件与组合的依据分别见 [EXP-009](../experiments/EXP-009/report.md) 和 [EXP-010](../experiments/EXP-010/report.md)；按 TASK-004 决策表不进入完整训练。IDEA 的采纳或放弃由用户决定。

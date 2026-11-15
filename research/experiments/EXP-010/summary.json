@@ -1,0 +1,51 @@
+{
+  "exp": "EXP-010",
+  "title": "细节回注叠加筛选：边界监督与相邻切片",
+  "run_dir": "screening-stack-boundary-context_1114_1954",
+  "collected_at": "2026-11-15T14:49:24+08:00",
+  "git": {
+    "commit": "18498f9b7e333c7dd8e1fb7b15f6a19873160fb3",
+    "branch": "stage003-detail-stacking",
+    "dirty": false,
+    "changes": []
+  },
+  "config": {
+    "epochs": 10,
+    "batch_size": 16,
+    "learning_rate": 1e-05,
+    "pretrained": null,
+    "warm_start": "/home/hzh/hwh/Seg/VM-UNet-main/results/brats2020_detail_gated_1113_1530/best.pth",
+    "extension": {
+      "detail_fusion": {
+        "mode": "gated",
+        "full_channels": 16,
+        "half_channels": 32,
+        "boundary_weight": 0.5,
+        "context_slices": 1
+      }
+    }
+  },
+  "epochs_completed": 10,
+  "train_hours": 1.83,
+  "parameters": 27504277,
+  "selected_epoch": 10,
+  "selection": "fixed",
+  "val": {
+    "mean_dice": 0.8305489072295135,
+    "mean_hd95_mm": 16.182308988812494,
+    "WT": {
+      "dice": 0.9078436757407344,
+      "hd95_mm": 8.954029007635413
+    },
+    "TC": {
+      "dice": 0.8246225680183218,
+      "hd95_mm": 7.749895019642301
+    },
+    "ET": {
+      "dice": 0.7591804779294843,
+      "hd95_mm": 31.843002939159764
+    },
+    "et_empty_false_positive": "2/5",
+    "et_nonempty_dice": 0.7750985257224329
+  }
+}

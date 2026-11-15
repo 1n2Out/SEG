@@ -1,6 +1,6 @@
 # TASK-004：细节回注基座上的叠加筛选与完整训练
 
-状态：待执行 · 想法：[IDEA-005](../research/ideas/IDEA-005-boundary-supervision.md)、[IDEA-006](../research/ideas/IDEA-006-slice-context.md)（基座 IDEA-001） · 发起：A，2026-11-14 · 分支：见 STATE.md
+状态：已完成（筛选均未通过，不启动完整训练） · 想法：[IDEA-005](../../research/ideas/IDEA-005-boundary-supervision.md)、[IDEA-006](../../research/ideas/IDEA-006-slice-context.md)（基座 IDEA-001） · 发起：A，2026-11-14 · 分支：见 STATE.md
 
 ## 目的
 
@@ -46,8 +46,9 @@
 
 ## 回执（B 填写）
 
-- **实际提交：**
-- **运行目录：**
-- **异常与修复：**
-- **结论：**
-- **建议：**
+- **实际提交：** 四组训练均为 `18498f9`，源码及配置干净；分析与文档随本回执一并提交（用户已授权）。
+- **运行目录：** `results/screening-stack-{control,boundary,context,boundary-context}_1114_1954`（依次 EXP-007～010、GPU 2～5），环境 `vm_unet`；四组均完成 10 轮，结果见 [总表](../../research/experiments/index.md)。
+- **异常与修复：** 无代码修复；GPU 4/5 有其他用户进程，训练耗时不作严格性能比较。
+- **检查结果：** CPU 78 passed、CUDA 4 passed、双进程 2 passed，无 skipped；权重 epoch=95；组合/对照 smoke 完成前后向与 1 例 val，new=13/0；四组 dry-run 通过。
+- **结论与执行：** 固定第 10 轮的三个候选均未通过 Mean Dice 增益与 ET 上升门槛；依决策表不启动完整训练，未执行 FINAL。逐患者核验和四项判定见 `analysis/compare-stacking.py`，产物为 `results/analysis/task-004/`。
+- **建议：** 保留 EXP-006 为叠加基座；不调参重跑，不修改 IDEA 状态，下一步研究取舍交由用户。
