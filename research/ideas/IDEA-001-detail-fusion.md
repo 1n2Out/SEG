@@ -52,6 +52,6 @@ baseline 在 val 上的非空 ET Dice 为 75.09%（[EXP-001](../experiments/EXP-
 
 - **验证集：** 完整训练有收益，见 [EXP-006](../experiments/EXP-006/report.md)。
 - **测试集：** 只评价过一次，见 [FINAL 报告](../experiments/EXP-006/final/report.md)。Dice 提升且 ET 最明显；Mean HD95 未同步改善，患者重采样区间跨 0，论文须如实呈现。
-- **门控：** 独立贡献缺少完整 concat 对照，论文中不单独宣称门控涨点。
-- **叠加件：** [IDEA-005](IDEA-005-boundary-supervision.md)、[IDEA-006](IDEA-006-slice-context.md) 筛选未通过，已放弃。
+- **门控：** 独立贡献缺少完整 concat 对照，论文中不单独宣称门控涨点；concat 完整训练由 [TASK-005](../../handoff/task-005-detail-options-full-training.md) 补做。
+- **叠加件：** [IDEA-005](IDEA-005-boundary-supervision.md)、[IDEA-006](IDEA-006-slice-context.md) 筛选未通过，已放弃；[IDEA-007](IDEA-007-deep-supervision.md)（深监督）和 [IDEA-008](IDEA-008-input-stem.md)（输入端补强）由 TASK-005 完整训练检验。
 - **后续优化的约束：** A 已于 2026-11-15 接触测试集，此后在 BraTS 上提出的优化 IDEA 须注明这一点，且不得以测试集现象为动机；优化后的最终模型只测一次 test。

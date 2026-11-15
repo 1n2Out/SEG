@@ -151,8 +151,12 @@ def build_model(config):
 
 
 def build_criterion(config):
-    innovation_settings(config)
-    # All current experiments optimize exactly the original CE + regional Dice.
+    extension = innovation_settings(config)
+    # Every run optimizes the original CE + regional Dice; only the detail-fusion
+    # deep_supervision option adds the same loss on its auxiliary training outputs.
+    if extension is not None and extension[0] == "detail_fusion" and extension[1]["deep_supervision"]:
+        from brats.innovations.detail_fusion.loss import DeepSupervisionLoss
+        return DeepSupervisionLoss()
     from brats.losses import BraTSCEDiceLoss
     return BraTSCEDiceLoss()
 
@@ -392,8 +396,10 @@ def run(args, rank=0, world_size=1, local_rank=0):
     if args.mode == "smoke":
         batch = next(iter(loader))
         model.train()
-        logits = model(batch["image"].to(device))
-        loss = criterion(logits, batch["label"].to(device))
+        # Training forwards may return (logits, auxiliary outputs); evaluation returns logits.
+        outputs = model(batch["image"].to(device))
+        loss = criterion(outputs, batch["label"].to(device))
+        logits = outputs[0] if isinstance(outputs, tuple) else outputs
         if not torch.isfinite(loss):
             raise ValueError("Nonfinite smoke loss")
         loss.backward()
