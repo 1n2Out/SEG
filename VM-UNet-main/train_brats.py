@@ -53,25 +53,29 @@ def load_checkpoint(path):
 
 # Optional model extensions; each is a VMUNet subclass whose new parameters live
 # under the attribute of the same name. At most one is configured per run.
-EXTENSIONS = ("shallow_refinement", "detail_fusion")
+EXTENSIONS = ("detail_fusion",)
+# Retired extensions fail loudly, so an old config can never silently train the baseline.
+RETIRED = {
+    "region_presence": "region_presence has been retired; use the old run's exports/*_inference.pth "
+                       "for evaluation, or restore its archived source for resume",
+    "shallow_refinement": "shallow_refinement has been retired (IDEA-002); restore its source from git "
+                          "commit 36d1f43 to evaluate or resume old runs",
+}
 WARM_START_DEFAULTS = {"checkpoint": None, "new_parameter_lr": None, "new_parameters": None}
 
 
 def innovation_settings(config):
     """Return (name, resolved settings) of the configured model extension, or None."""
-    if "region_presence" in config:
-        raise ValueError("region_presence has been retired; use the old run's exports/*_inference.pth "
-                         "for evaluation, or restore its archived source for resume")
+    for name, message in RETIRED.items():
+        if name in config:
+            raise ValueError(message)
     names = [name for name in EXTENSIONS if name in config]
     if not names:
         return None
     if len(names) > 1:
         raise ValueError("Configure at most one model extension, found: " + ", ".join(names))
     name = names[0]
-    if name == "shallow_refinement":
-        from brats.innovations.shallow_refinement import resolve_settings
-    else:
-        from brats.innovations.detail_fusion import resolve_settings
+    from brats.innovations.detail_fusion import resolve_settings
     return name, resolve_settings(config[name])
 
 
@@ -81,14 +85,6 @@ def extension_prefixes(config):
     if extension is None or extension[1]["mode"] == "off":
         return ()
     return (extension[0] + ".",)
-
-
-def input_context(config):
-    """Neighbouring slices per side that the configured model reads (0: current slice only)."""
-    extension = innovation_settings(config)
-    if extension is None or extension[0] != "detail_fusion":
-        return 0
-    return extension[1]["context_slices"]
 
 
 def new_parameter_prefixes(config):
@@ -149,22 +145,14 @@ def build_model(config):
                   depths_decoder=config["depths_decoder"], drop_path_rate=config["drop_path_rate"],
                   load_ckpt_path=config["pretrained"])
     if extension is not None and extension[1]["mode"] != "off":
-        name, settings = extension
-        if name == "shallow_refinement":
-            from brats.innovations.shallow_refinement.model import ShallowRefinementVMUNet
-            return ShallowRefinementVMUNet(shallow_refinement=settings, **kwargs)
         from brats.innovations.detail_fusion.model import DetailFusionVMUNet
-        return DetailFusionVMUNet(detail_fusion=settings, **kwargs)
+        return DetailFusionVMUNet(detail_fusion=extension[1], **kwargs)
     return VMUNet(**kwargs)
 
 
 def build_criterion(config):
-    extension = innovation_settings(config)
-    # Every run optimizes the original CE + regional Dice; only the detail-fusion
-    # boundary option adds an auxiliary term on its own training output.
-    if extension is not None and extension[0] == "detail_fusion" and extension[1]["boundary_weight"] > 0:
-        from brats.innovations.detail_fusion.loss import BoundaryAuxLoss
-        return BoundaryAuxLoss(extension[1]["boundary_weight"])
+    innovation_settings(config)
+    # All current experiments optimize exactly the original CE + regional Dice.
     from brats.losses import BraTSCEDiceLoss
     return BraTSCEDiceLoss()
 
@@ -376,14 +364,12 @@ def run(args, rank=0, world_size=1, local_rank=0):
     raw_model = model
     if distributed:
         model = DistributedDataParallel(model, device_ids=[local_rank], output_device=local_rank)
-    context = input_context(config)  # training and every 3D inference must stack slices alike
     if args.mode in ("evaluate", "predict"):
         split = "official_val" if args.mode == "predict" else args.split
         summary = evaluate(model, prediction_manifest if args.mode == "predict" else manifest,
                            args.cache_dir, split, device, config,
                            args.work_dir / ("evaluation_" + split),
-                           save_predictions=args.save_predictions or args.mode == "predict",
-                           context_slices=context)
+                           save_predictions=args.save_predictions or args.mode == "predict")
         summary["checkpoint"] = str(args.checkpoint.resolve())
         summary["checkpoint_epoch"] = checkpoint["epoch"]
         summary["training_manifest_sha256"] = manifest["sha256"]
@@ -391,7 +377,7 @@ def run(args, rank=0, world_size=1, local_rank=0):
         write_json(args.work_dir / ("evaluation_" + split) / "summary.json", summary)
         print(json.dumps(summary, indent=2))
         return
-    dataset = BraTSSlices(manifest, args.cache_dir, "train", config["input_size"], context_slices=context)
+    dataset = BraTSSlices(manifest, args.cache_dir, "train", config["input_size"])
     generator = torch.Generator().manual_seed(seed)
     # Padding at most world_size-1 slices keeps every rank's step count equal.
     sampler = DistributedSampler(dataset, num_replicas=world_size, rank=rank,
@@ -406,9 +392,8 @@ def run(args, rank=0, world_size=1, local_rank=0):
     if args.mode == "smoke":
         batch = next(iter(loader))
         model.train()
-        outputs = model(batch["image"].to(device))
-        loss = criterion(outputs, batch["label"].to(device))
-        logits = outputs[0] if isinstance(outputs, tuple) else outputs
+        logits = model(batch["image"].to(device))
+        loss = criterion(logits, batch["label"].to(device))
         if not torch.isfinite(loss):
             raise ValueError("Nonfinite smoke loss")
         loss.backward()
@@ -418,7 +403,7 @@ def run(args, rank=0, world_size=1, local_rank=0):
         model.zero_grad(set_to_none=True)
         if primary:
             evaluate(raw_model, manifest, args.cache_dir, "val", device, config,
-                     args.work_dir / "smoke", limit=1, context_slices=context)
+                     args.work_dir / "smoke", limit=1)
         if distributed:
             dist.barrier()
         return
@@ -512,8 +497,7 @@ def run(args, rank=0, world_size=1, local_rank=0):
             if primary:
                 # Bypass the DDP wrapper so other ranks can wait without forward collectives.
                 summary = evaluate(raw_model, manifest, args.cache_dir, "val", device, config,
-                                   args.work_dir / "validation" / f"epoch_{epoch:03d}",
-                                   context_slices=context)
+                                   args.work_dir / "validation" / f"epoch_{epoch:03d}")
                 record["val_mean_dice"] = summary["mean_dice"]
                 record["val_dice"] = {r: summary["regions"][r]["dice"]["mean"] for r in ("WT", "TC", "ET")}
                 early_stopping.update(summary["mean_dice"])

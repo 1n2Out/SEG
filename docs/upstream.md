@@ -1,6 +1,6 @@
 # 原 VM-UNet 参考
 
-原论文为 [VM-UNet: Vision Mamba UNet for Medical Image Segmentation](https://arxiv.org/abs/2402.02491)，原作者在 ISIC17、ISIC18 和 Synapse 上做实验。模型部分参考了 [VMamba](https://github.com/MzeroMiko/VMamba)，原仓库同时致谢 [Swin-UNet](https://github.com/HuCaoFighting/Swin-Unet)。当前副本缺少原 `LICENSE` 文件，需要从原始来源补回。原作者的实验结果不代表本项目的结果。
+原论文为 [VM-UNet: Vision Mamba UNet for Medical Image Segmentation](https://arxiv.org/abs/2402.02491)，原作者在 ISIC17、ISIC18 和 Synapse 上做实验。模型部分参考了 [VMamba](https://github.com/MzeroMiko/VMamba)，原仓库同时致谢 [Swin-UNet](https://github.com/HuCaoFighting/Swin-Unet)。本副本缺少原 `LICENSE` 文件，需要从原始来源补回。原作者的实验结果不代表本项目的结果。
 
 ## 原环境记录
 
@@ -8,7 +8,7 @@
 
 ## 旧入口
 
-原 ISIC 和 Synapse 的入口（`train.py`、`train_synapse.py`、`engine*.py`、`utils.py`、`configs/config_setting*.py`）已从源码中移除。它们的数据划分、模型选择方式和 checkpoint 格式都与 BraTS 协议不同，**不能继承**。历史归档 `others/archives/vmunet_upstream_legacy_2026-11-01.zip` 不在当前仓库中。
+原 ISIC 和 Synapse 的入口（`train.py`、`train_synapse.py`、`engine*.py`、`utils.py`、`configs/config_setting*.py`）已从源码中移除。它们的数据划分、模型选择方式和 checkpoint 格式都与 BraTS 协议不同，**不能继承**。历史归档 `others/archives/vmunet_upstream_legacy_2026-11-01.zip` 不在本仓库中。
 
 ## 原资源
 

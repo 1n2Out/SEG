@@ -4,12 +4,12 @@
 
 | ID | 名称 | 状态 | 一句话 |
 |---|---|---|---|
-| [IDEA-001](IDEA-001-detail-fusion.md) | 多分辨率细节回注 + 语义门控 | 已实现 | 补上 VM-UNet 缺失的 1/2、1/1 尺度，针对薄层 ET；叠加基座 |
-| [IDEA-002](IDEA-002-shallow-refinement.md) | 浅层细节回注 | 已实现 | 只在 1/4 尺度补连接，保留为可选的尺度对照 |
+| [IDEA-001](IDEA-001-detail-fusion.md) | 多分辨率细节回注 + 语义门控 | 采纳 | 补上 VM-UNet 缺失的 1/2、1/1 尺度，针对薄层 ET；论文主线，后续优化的基座 |
+| [IDEA-002](IDEA-002-shallow-refinement.md) | 浅层细节回注 | 放弃 | 只在 1/4 尺度补连接；不属于 IDEA-001，不再保留为对照 |
 | [IDEA-003](IDEA-003-modality-difference.md) | 区域条件的模态差异补偿 | 候选 | 用 T1ce−T1 等模态差异补偿 ET 和 TC；暂缓 |
 | [IDEA-004](IDEA-004-et-postprocess.md) | ET 小体积后处理 | 放弃 | 空 ET 误判体积大，去掉它们会误删真实小 ET；统一施加时 baseline 获益更多 |
-| [IDEA-005](IDEA-005-boundary-supervision.md) | 细节支路的边界辅助监督 | 已实现 | 给补回的 1/1 特征加边界带监督；叠加筛选未通过，见 EXP-008/010 |
-| [IDEA-006](IDEA-006-slice-context.md) | 细节支路读取相邻切片 | 已实现 | 只给细节支路补层间信息；叠加筛选未通过，见 EXP-009/010 |
+| [IDEA-005](IDEA-005-boundary-supervision.md) | 细节支路的边界辅助监督 | 放弃 | 给补回的 1/1 特征加边界带监督；筛选中 ET 多数病例下降，HD95 改善由少数病例带动 |
+| [IDEA-006](IDEA-006-slice-context.md) | 细节支路读取相邻切片 | 放弃 | 只给细节支路补层间信息；筛选中无方向性信号，与边界监督叠加也不互补 |
 | — | 区域存在性感知监督 | 放弃 | 非空 ET 有改善，但空 ET 假阳性增多，总体退步；源码在 `VM-UNet-main/archives/` |
 
 ## 候选池（未立项，只保留取舍结论）

@@ -13,4 +13,4 @@
 
 ## 来源与许可
 
-原论文为 [VM-UNet: Vision Mamba UNet for Medical Image Segmentation](https://arxiv.org/abs/2402.02491)，模型参考 [VMamba](https://github.com/MzeroMiko/VMamba)，原仓库还致谢了 [Swin-UNet](https://github.com/HuCaoFighting/Swin-Unet)。原资源见 [docs/upstream.md](../docs/upstream.md)。当前副本缺少原 `LICENSE` 文件，需要从原始来源补回。数据使用须遵循各数据集自己的使用约定。
+原论文、上游仓库和许可说明见 [docs/upstream.md](../docs/upstream.md)。数据使用须遵循各数据集自己的使用约定。

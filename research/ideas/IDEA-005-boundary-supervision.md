@@ -1,6 +1,6 @@
 # IDEA-005：细节支路的边界辅助监督
 
-状态：**已实现** · 方法文档：[detail_fusion](../../docs/methods/detail_fusion.md)（选项 `boundary_weight`） · 任务：[TASK-004](../../handoff/archive/task-004-detail-stacking.md)
+状态：**放弃** · 任务：[TASK-004](../../handoff/archive/task-004-detail-stacking.md) · 决定：[decisions](../decisions.md) 2026-11-15
 
 ## 动机
 
@@ -27,4 +27,9 @@
 
 ## 结论
 
-热启动筛选未通过，单件与组合的依据分别见 [EXP-008](../experiments/EXP-008/report.md) 和 [EXP-010](../experiments/EXP-010/report.md)；按 TASK-004 决策表不进入完整训练。IDEA 的采纳或放弃由用户决定。
+放弃。热启动筛选未通过，见 [EXP-008](../experiments/EXP-008/report.md)（单件）和 [EXP-010](../experiments/EXP-010/report.md)（与 IDEA-006 叠加）。逐例数字来自 `VM-UNet-main/analysis/compare-stacking.py` 的产物（固定第 10 轮，相对热启动对照 [EXP-007](../experiments/EXP-007/report.md)）。
+
+- **与动机相反。** ET Dice 38 例下降、9 例上升；边界监督没有帮到薄层 ET。
+- **HD95 改善不稳。** Mean HD95 均值降 1.04 mm，但中位数升 0.05 mm，30 例变差、22 例改善，均值由少数病例带动。
+- **Mean Dice 无增益。** 均值 +0.01 个百分点，中位差 −0.26 个百分点，40 例下降。
+- 代码已删除，实现见提交 `18498f9`。

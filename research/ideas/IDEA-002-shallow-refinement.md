@@ -1,6 +1,6 @@
 # IDEA-002：浅层细节回注
 
-状态：**已实现** · 方法文档：[shallow_refinement](../../docs/methods/shallow_refinement.md) · 任务：作为 [TASK-001](../../handoff/archive/task-001-detail-fusion-screening.md) 的可选对照
+状态：**放弃** · 任务：作为 [TASK-001](../../handoff/archive/task-001-detail-fusion-screening.md) 的可选对照 · 决定：[decisions](../decisions.md) 2026-11-15
 
 ## 动机
 
@@ -18,8 +18,8 @@
 
 ## 定位
 
-这个方法不提高分辨率，预计提升空间有限，不单独做完整训练。它不在 2026-11-14 确定的叠加路线中，只保留为可选的尺度对照，用来说明"更高分辨率才是关键"。
+这个方法不提高分辨率，预计提升空间有限，不单独做完整训练，只保留为 IDEA-001 的尺度对照，用来说明"更高分辨率才是关键"。
 
 ## 结论
 
-热启动尺度对照的结果与限制见 [EXP-005](../experiments/EXP-005/report.md)；尚无该方法的完整协议训练结果，方法采纳与后续研究由用户决定。
+放弃。热启动尺度对照见 [EXP-005](../experiments/EXP-005/report.md)，未做完整训练；它不是 IDEA-001 的组成部分，用户决定不再保留为对照。代码已删除，实现见提交 `36d1f43`，旧配置会被训练入口拒绝。

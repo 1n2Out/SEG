@@ -24,7 +24,7 @@ Mean Dice 为 83.05%，相对 EXP-001 +1.27 个百分点；ET Dice +2.44 个百�
 - 非空 ET 的平均 Dice +2.68 个百分点；39 例上升、8 例下降、3 例持平，增益不是由空 ET 规则变化产生。
 - 原 100 轮轨迹的前 60 轮最佳为 82.25%，到最终 best 另增 0.80 个百分点；这不是独立的 60 轮余弦调度实验，不能据此直接改协议。
 - 分析：[compare-full-training.py](../../../VM-UNet-main/analysis/compare-full-training.py)；默认命令 `python -B analysis/compare-full-training.py` 仅分析 val，产物在 `results/analysis/exp-006/`。
-- [训练与验证曲线](../../../VM-UNet-main/results/analysis/exp-006/curves/training_curves.png)：`python -B plot_brats.py curves --work-dirs results/brats2020_1102_1734 results/brats2020_detail_gated_1113_1530 --names Baseline Detail-Gated --formats png --output-dir results/analysis/exp-006/curves`。
+- 训练与验证曲线（B 端产物，不入库）`results/analysis/exp-006/curves/training_curves.png`：`python -B plot_brats.py curves --work-dirs results/brats2020_1102_1734 results/brats2020_detail_gated_1113_1530 --names Baseline Detail-Gated --formats png --output-dir results/analysis/exp-006/curves`。
 
 ## 结论与建议
 

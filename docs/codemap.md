@@ -33,8 +33,6 @@ SEG/                          # git 仓库根目录
 |---|---|
 | 患者清单、缓存、几何检查 | `prepare_brats.py`、`brats/data.py` |
 | 切片读取、增强、损失 | `brats/dataset.py`、`brats/losses.py` |
-| 相邻切片堆叠（训练与三维推理共用） | `brats/dataset.py::stack_slices`；层数由 `train_brats.py::input_context` 从配置读出 |
-| 方法的辅助损失 | `train_brats.py::build_criterion` 分派；训练态模型可返回 `(logits, 辅助输出)`，评价态只返回 logits |
 | 三维推理、指标、预测导出 | `brats/engine.py`、`brats/metrics.py` |
 | 训练循环、DDP、恢复、选 best、热启动 | `train_brats.py`、`brats/training.py`；热启动新张量由 `new_parameter_prefixes` 决定 |
 | 启动、GPU 选择、来源检查、测试闸门 | `run_brats.py`、`brats/provenance.py` |
@@ -45,7 +43,7 @@ SEG/                          # git 仓库根目录
 
 ## 新增模型扩展的约定
 
-现有的 `detail_fusion` 和 `shallow_refinement` 都按以下方式实现，新方法照做：
+`detail_fusion` 按以下方式实现，新方法照做：
 
 1. **子包结构。** 在 `brats/innovations/<name>/` 下建子包：
    - `__init__.py`：负责配置解析和默认值，不导入 torch；
@@ -55,7 +53,8 @@ SEG/                          # git 仓库根目录
 3. **不影响 baseline。** 不写扩展字段时，模型构建、初始化、随机数序列和优化器必须与 baseline 完全一致。新模块在主干之后构建，并隔离自己的随机数。
 4. **新分支零初始化，以残差方式接入。** 初始输出要与 baseline 相同，这是能做热启动筛选的前提。参数集合保持固定，保证 DDP 正常工作。
 5. **叠加在已有扩展上的部件，作为该扩展的选项实现。** 一次运行仍只启用一个扩展。选项部件在共享部分之后构建，默认关闭时模型逐位不变；从已含该扩展的 checkpoint 热启动时，用 `warm_start.new_parameters` 声明新部件。
-6. **配套交付。** 包括：正式配置和筛选配置（相对 baseline 只多出模块字段和输出目录）、CPU 测试、CUDA 测试（交给 B 执行）、`docs/methods/<name>.md`。
+6. **退役。** 删除方法时，把字段名加入 `train_brats.py::RETIRED`，旧配置会直接报错，而不是静默变成 baseline；`collect_brats.py` 的 `EXTENSIONS` 保留旧名，以便重新收集历史运行。
+7. **配套交付。** 包括：正式配置和筛选配置（相对 baseline 只多出模块字段和输出目录）、CPU 测试、CUDA 测试（交给 B 执行）、`docs/methods/<name>.md`。
 
 ## 修改禁区
 

@@ -16,6 +16,7 @@ from pathlib import Path
 SOURCE = Path(__file__).resolve().parent
 DEFAULT_OUT = SOURCE.parent / "research" / "experiments"
 REGIONS = ("WT", "TC", "ET")
+# Includes retired extensions so that historical runs keep their metadata when re-collected.
 EXTENSIONS = ("shallow_refinement", "detail_fusion")
 EXP_PATTERN = re.compile(r"EXP-\d{3}")
 INDEX_HEADER = "<!-- 由 collect_brats.py 生成，勿手改 -->"

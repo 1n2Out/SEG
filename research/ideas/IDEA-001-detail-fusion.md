@@ -1,6 +1,6 @@
 # IDEA-001：多分辨率细节回注与语义门控
 
-状态：**已实现** · 角色：叠加基座 · 方法文档：[detail_fusion](../../docs/methods/detail_fusion.md)
+状态：**采纳** · 角色：论文主线创新点，后续优化的基座 · 方法文档：[detail_fusion](../../docs/methods/detail_fusion.md) · 实验：[EXP-006](../experiments/EXP-006/report.md) · 决定：[decisions](../decisions.md) 2026-11-15
 
 ## 动机
 
@@ -48,4 +48,10 @@ baseline 在 val 上的非空 ET Dice 为 75.09%（[EXP-001](../experiments/EXP-
 
 ## 结论
 
-完整训练在验证集上有收益，见 [EXP-006](../experiments/EXP-006/report.md)；门控的独立贡献缺少完整 concat 对照，论文中不单独宣称门控涨点。按 2026-11-14 决定作为叠加基座，叠加件见 [IDEA-005](IDEA-005-boundary-supervision.md)、[IDEA-006](IDEA-006-slice-context.md)。
+2026-11-15 采纳为第二项工作的正式创新点，后续优化以 EXP-006 为基座和对照。
+
+- **验证集：** 完整训练有收益，见 [EXP-006](../experiments/EXP-006/report.md)。
+- **测试集：** 只评价过一次，见 [FINAL 报告](../experiments/EXP-006/final/report.md)。Dice 提升且 ET 最明显；Mean HD95 未同步改善，患者重采样区间跨 0，论文须如实呈现。
+- **门控：** 独立贡献缺少完整 concat 对照，论文中不单独宣称门控涨点。
+- **叠加件：** [IDEA-005](IDEA-005-boundary-supervision.md)、[IDEA-006](IDEA-006-slice-context.md) 筛选未通过，已放弃。
+- **后续优化的约束：** A 已于 2026-11-15 接触测试集，此后在 BraTS 上提出的优化 IDEA 须注明这一点，且不得以测试集现象为动机；优化后的最终模型只测一次 test。

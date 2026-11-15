@@ -23,7 +23,7 @@ METRICS = ("dice", "hd95_mm", "precision", "recall", "specificity")
 
 
 def read_json(path):
-    return json.loads(path.read_text())
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def read_results(exp, split):
@@ -31,7 +31,7 @@ def read_results(exp, split):
     summary_path = directory / ("summary.json" if split == "val" else "final/test_summary.json")
     csv_path = directory / ("val_per_patient.csv" if split == "val" else "final/test_per_patient.csv")
     summary = read_json(summary_path)
-    with csv_path.open(newline="") as stream:
+    with csv_path.open(newline="", encoding="utf-8") as stream:
         rows = list(csv.DictReader(stream))
     patients = {row["case_id"]: row for row in rows}
     if len(rows) != 55 or len(patients) != len(rows):
@@ -120,7 +120,7 @@ def compare(split):
     if split == "val":
         trajectories = {}
         for exp in ("EXP-001", "EXP-006"):
-            rows = [json.loads(line) for line in (EXPERIMENTS / exp / "history.jsonl").read_text().splitlines() if line.strip()]
+            rows = [json.loads(line) for line in (EXPERIMENTS / exp / "history.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
             validated = [r for r in rows if r.get("val_mean_dice") is not None]
             early_best = max((r for r in validated if r["epoch"] <= 60), key=lambda r: r["val_mean_dice"])
             trajectories[exp] = {"best_within_first_60": {"epoch": early_best["epoch"], "mean_dice": early_best["val_mean_dice"]},
@@ -141,7 +141,7 @@ def compare(split):
         row["ET_hd95_delta_mm"] for row in worst_hd95[:2]) / len(pairs) / 3
     directory = OUTPUT if split == "val" else OUTPUT / "final"
     directory.mkdir(parents=True, exist_ok=True)
-    with (directory / f"{split}-paired.csv").open("w", newline="") as stream:
+    with (directory / f"{split}-paired.csv").open("w", newline="", encoding="utf-8") as stream:
         writer = csv.DictWriter(stream, fieldnames=list(pairs[0]))
         writer.writeheader()
         writer.writerows(pairs)

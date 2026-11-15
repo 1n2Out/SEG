@@ -23,12 +23,12 @@ IDS = ("EXP-002", "EXP-003", "EXP-004", "EXP-005")
 
 def read_experiment(exp):
     directory = EXPERIMENTS / exp
-    summary = json.loads((directory / "summary.json").read_text())
-    config = json.loads((directory / "config.json").read_text())
+    summary = json.loads((directory / "summary.json").read_text(encoding="utf-8"))
+    config = json.loads((directory / "config.json").read_text(encoding="utf-8"))
     if (summary["selected_epoch"] != 10 or summary["selection"] != "fixed"
             or summary["epochs_completed"] != 10):
         raise ValueError(f"{exp} 必须使用完成 10 轮后的固定第 10 轮结果")
-    with (directory / "val_per_patient.csv").open(newline="") as stream:
+    with (directory / "val_per_patient.csv").open(newline="", encoding="utf-8") as stream:
         rows = list(csv.DictReader(stream))
     patients = {row["case_id"]: row for row in rows}
     if len(rows) != 55 or len(patients) != len(rows):
@@ -99,7 +99,7 @@ def compare(candidate, reference, experiments):
     stats["largest_losses"] = ranked[:5]
     stats["largest_gains"] = ranked[-5:][::-1]
     filename = f"{candidate.lower()}-vs-{reference.lower()}.csv"
-    with (OUTPUT / filename).open("w", newline="") as stream:
+    with (OUTPUT / filename).open("w", newline="", encoding="utf-8") as stream:
         writer = csv.DictWriter(stream, fieldnames=list(rows[0]))
         writer.writeheader()
         writer.writerows(rows)

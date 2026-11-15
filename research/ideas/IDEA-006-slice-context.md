@@ -1,6 +1,6 @@
 # IDEA-006：细节支路读取相邻切片
 
-状态：**已实现** · 方法文档：[detail_fusion](../../docs/methods/detail_fusion.md)（选项 `context_slices`） · 任务：[TASK-004](../../handoff/archive/task-004-detail-stacking.md) · 决定：[decisions](../decisions.md) 2026-11-14
+状态：**放弃** · 任务：[TASK-004](../../handoff/archive/task-004-detail-stacking.md) · 决定：[decisions](../decisions.md) 2026-11-14、2026-11-15
 
 ## 动机
 
@@ -31,4 +31,9 @@
 
 ## 结论
 
-热启动筛选未通过，单件与组合的依据分别见 [EXP-009](../experiments/EXP-009/report.md) 和 [EXP-010](../experiments/EXP-010/report.md)；按 TASK-004 决策表不进入完整训练。IDEA 的采纳或放弃由用户决定。
+放弃。热启动筛选未通过，见 [EXP-009](../experiments/EXP-009/report.md)（单件）和 [EXP-010](../experiments/EXP-010/report.md)（与 IDEA-005 叠加）。逐例数字来自 `VM-UNet-main/analysis/compare-stacking.py` 的产物（固定第 10 轮，相对热启动对照 [EXP-007](../experiments/EXP-007/report.md)）。
+
+- **没有方向性信号。** Mean Dice 中位差 −0.02 个百分点；ET Dice 31 例下降、16 例上升；Mean HD95 均值变差 1.73 mm。
+- **叠加也不互补。** EXP-010 的 ET Dice 中位差 −0.63 个百分点，比单用任一件都差。
+- 10 轮热启动可能低估它（见"风险"），但信号近于零，不值得花一次完整训练去验证。
+- 代码已删除，实现见提交 `18498f9`；协议恢复为不使用相邻切片。
