@@ -10,8 +10,8 @@
 | [IDEA-004](IDEA-004-et-postprocess.md) | ET 小体积后处理 | 放弃 | 空 ET 误判体积大，去掉它们会误删真实小 ET；统一施加时 baseline 获益更多 |
 | [IDEA-005](IDEA-005-boundary-supervision.md) | 细节支路的边界辅助监督 | 放弃 | 给补回的 1/1 特征加边界带监督；筛选中 ET 多数病例下降，HD95 改善由少数病例带动 |
 | [IDEA-006](IDEA-006-slice-context.md) | 细节支路读取相邻切片 | 放弃 | 只给细节支路补层间信息；筛选中无方向性信号，与边界监督叠加也不互补 |
-| [IDEA-007](IDEA-007-deep-supervision.md) | 多尺度深监督（粗—细两级） | 已实现 | 最终输出、1/2 支路、主干粗预测、解码器 1/8 和 1/16 同损失监督；由 TASK-005 完整训练检验 |
-| [IDEA-008](IDEA-008-input-stem.md) | 输入端卷积补强 | 已实现 | 共享的 1/2 细节降到 1/4，零初始化后加到 patch embedding；补 patch 瓶颈的输入端，由 TASK-005 检验 |
+| [IDEA-007](IDEA-007-deep-supervision.md) | 多尺度深监督（粗—细两级） | 放弃 | 五处同损失监督；完整训练 ET 升、TC 降，Mean Dice 无增益（EXP-011） |
+| [IDEA-008](IDEA-008-input-stem.md) | 输入端卷积补强 | 放弃 | 1/2 细节零初始化加到 patch embedding；完整训练 Mean Dice 与 ET 均下降（EXP-012） |
 | — | 区域存在性感知监督 | 放弃 | 非空 ET 有改善，但空 ET 假阳性增多，总体退步；源码在 `VM-UNet-main/archives/` |
 
 ## 候选池（未立项，只保留取舍结论）

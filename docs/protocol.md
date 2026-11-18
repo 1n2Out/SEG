@@ -25,7 +25,7 @@ baseline、改进和消融共用本协议。参数的权威值在 `VM-UNet-main/
 |---|---|
 | 主干 | VM-UNet，编码深度 `[2,2,2,2]`，解码深度 `[2,2,2,1]`，drop path 0.2，参数量 27,429,172 |
 | 初始化 | VMamba `vmamba_small_e238_ema.pth` 预训练，路径相对源码目录为 `../../package/`。只加载形状兼容的部分（原网络深度为 `[2,2,27,2]`）；RGB 输入卷积按通道取均值、复制 4 份后乘 3/4 |
-| 输出与损失 | 4 类互斥 logits，原始标签 4 映射为 3。损失为 CE 与 WT/TC/ET soft Dice 等权相加，Dice 按切片计算后平均。方法可附加训练期辅助损失（写在方法文档里），主输出的损失和评价不变 |
+| 输出与损失 | 4 类互斥 logits，原始标签 4 映射为 3。损失为 CE 与 WT/TC/ET soft Dice 等权相加，Dice 按切片计算后平均 |
 | 优化 | AdamW，lr 1e-4，weight decay 0.01，余弦调度（T_max 等于总轮数） |
 | 训练量 | 最多 100 轮；单卡 batch 16，workers 4，AMP 开启；推理 batch 8 |
 | 选 best 与早停 | 第 1 轮及每 5 轮在 val 上做三维评价，按 Mean Dice 最高选 best。早停 patience 为 10 次验证，min_delta 1e-4 |

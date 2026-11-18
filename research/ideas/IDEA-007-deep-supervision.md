@@ -1,6 +1,6 @@
 # IDEA-007：多尺度深监督（粗—细两级）
 
-状态：**已实现** · 基座：[IDEA-001](IDEA-001-detail-fusion.md) · 方法文档：[detail_fusion](../../docs/methods/detail_fusion.md) 的 `deep_supervision` · 任务：[TASK-005](../../handoff/task-005-detail-options-full-training.md) · 决定：[decisions](../decisions.md) 2026-11-15
+状态：**放弃** · 基座：[IDEA-001](IDEA-001-detail-fusion.md) · 任务：[TASK-005](../../handoff/task-005-detail-options-full-training.md) · 决定：[decisions](../decisions.md) 2026-11-15、2026-11-18
 
 > A 已于 2026-11-15 接触测试集。本 IDEA 的动机只来自 train/val、已有 EXP 和业界通行做法，不来自测试集现象。
 
@@ -16,7 +16,7 @@
 
 ## 核心思想
 
-训练时在最终输出、1/2 支路、主干粗预测、解码器 1/8 和 1/16 五处使用同一种 CE + 区域 Dice，权重逐级减半。推理时辅助头不参与，输出与推理计算量不变。细节见方法文档。
+训练时在最终输出、1/2 支路、主干粗预测、解码器 1/8 和 1/16 五处使用同一种 CE + 区域 Dice，权重逐级减半。推理时辅助头不参与，输出与推理计算量不变。实现见提交 `6785299`。
 
 ## 依据
 
@@ -32,4 +32,8 @@
 
 ## 结论
 
-未开展实验。
+放弃。完整训练未通过 TASK-005 门槛，见 [EXP-011](../experiments/EXP-011/report.md)（单件）和 [EXP-013](../experiments/EXP-013/report.md)（与 IDEA-008 组合），对照 EXP-006，数字来自 `VM-UNet-main/analysis/compare-detail-options.py` 的产物。代码、配置与测试已删除，实现见提交 `6785299`。
+
+- **ET 与 TC 此消彼长。** ET Dice 升 0.97 个百分点，非空 ET 30 例上升、18 例下降；但 TC Dice 降 1.05 个百分点，Mean Dice −0.03 个百分点。
+- **HD95 降 1.49 mm，** 不作门槛。空 ET 假阳性不变，未重现先例中的假阳性增多。
+- **与 IDEA-008 组合更差：** Mean Dice −0.38、ET −1.31 个百分点，val best 落在第 35 轮。

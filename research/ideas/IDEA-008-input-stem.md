@@ -1,6 +1,6 @@
 # IDEA-008：输入端卷积补强（与细节支路共享）
 
-状态：**已实现** · 基座：[IDEA-001](IDEA-001-detail-fusion.md) · 方法文档：[detail_fusion](../../docs/methods/detail_fusion.md) 的 `input_stem` · 任务：[TASK-005](../../handoff/task-005-detail-options-full-training.md) · 决定：[decisions](../decisions.md) 2026-11-15
+状态：**放弃** · 基座：[IDEA-001](IDEA-001-detail-fusion.md) · 任务：[TASK-005](../../handoff/task-005-detail-options-full-training.md) · 决定：[decisions](../decisions.md) 2026-11-15、2026-11-18
 
 > A 已于 2026-11-15 接触测试集。本 IDEA 的动机只来自模型结构分析和业界通行做法，不来自测试集现象。
 
@@ -15,7 +15,7 @@
 
 ## 核心思想
 
-细节支路已有的 1/2 细节 H 再降到 1/4，经零初始化投影加到 patch embedding 的输出上，初始输出不变。这样，一条共享的高分辨率卷积通路同时补强 patch 化主干的输入端和输出端。细节见方法文档。
+细节支路已有的 1/2 细节 H 再降到 1/4，经零初始化投影加到 patch embedding 的输出上，初始输出不变。这样，一条共享的高分辨率卷积通路同时补强 patch 化主干的输入端和输出端。实现见提交 `6785299`。
 
 ## 依据
 
@@ -31,4 +31,7 @@
 
 ## 结论
 
-未开展实验。
+放弃。完整训练未通过 TASK-005 门槛，见 [EXP-012](../experiments/EXP-012/report.md)（单件）和 [EXP-013](../experiments/EXP-013/report.md)（与 IDEA-007 组合），对照 EXP-006，数字来自 `VM-UNet-main/analysis/compare-detail-options.py` 的产物。代码、配置与测试已删除，实现见提交 `6785299`。
+
+- **均值下降。** Mean Dice −0.81、ET Dice −0.92 个百分点；空 ET 假阳性不变，下降不来自空 ET 病例。
+- **逐例与均值不一致。** Mean Dice 31 例上升、24 例下降，中位差 +0.19 个百分点，均值由少数病例的明显下降带动。

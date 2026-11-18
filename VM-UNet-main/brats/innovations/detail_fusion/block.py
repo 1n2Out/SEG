@@ -10,13 +10,6 @@ logits. Its 1x1 head starts at zero, so the initial model equals the baseline.
 In gated mode an LGAG-style gate (EMCAD, CVPR 2024) lets decoder semantics
 weight each detail map before concatenation; concat mode omits only the gate.
 GroupNorm replaces BatchNorm to stay independent of batch composition.
-
-Two optional parts are built after the shared branch, each from the same random
-state, so neither option changes the shared initialization or the other option's:
-- input_stem (IDEA-008): the 1/2 detail map, downsampled to 1/4, becomes a
-  zero-initialized residual on the backbone's patch embedding;
-- deep supervision heads (IDEA-007): 1x1 heads on the fused 1/2 features and on
-  the 1/16 and 1/8 decoder stages; training targets only, never part of the output.
 """
 import math
 
@@ -91,31 +84,12 @@ class SemanticGate(nn.Module):
         return detail * weight
 
 
-class InputStem(nn.Module):
-    """1/2 detail -> zero-initialized BHWC residual for the 1/4 patch embedding."""
-
-    def __init__(self, in_channels, embed_channels):
-        super().__init__()
-        self.block = ConvBlock(in_channels, 2 * in_channels, stride=2)
-        self.project = nn.Conv2d(2 * in_channels, embed_channels, 1)
-        nn.init.zeros_(self.project.weight)
-        nn.init.zeros_(self.project.bias)
-
-    def forward(self, half):
-        return self.project(self.block(half)).permute(0, 2, 3, 1)
-
-
 class DetailFusion(nn.Module):
     def __init__(self, in_channels, decoder_channels, num_classes, mode="gated",
-                 full_channels=16, half_channels=32, deep_supervision=False,
-                 decoder_stage_channels=(), input_stem=False, embed_channels=None):
+                 full_channels=16, half_channels=32):
         super().__init__()
         if mode not in ("concat", "gated"):
             raise ValueError("DetailFusion requires concat or gated mode")
-        if deep_supervision and len(decoder_stage_channels) != 2:
-            raise ValueError("Deep supervision needs the 1/16 and 1/8 decoder stage channels")
-        if input_stem and not embed_channels:
-            raise ValueError("The input stem needs the patch-embedding channels")
         self.mode = mode
         self.stem_full = ConvBlock(in_channels, full_channels)
         self.stem_half = ConvBlock(full_channels, half_channels, stride=2)
@@ -132,58 +106,22 @@ class DetailFusion(nn.Module):
         # Parameters always stay in the graph, keeping DDP's parameter set fixed.
         nn.init.zeros_(self.head.weight)
         nn.init.zeros_(self.head.bias)
-        # Optional parts come last, each drawn from the same random state: the
-        # shared branch, and each option's weights, do not depend on the other option.
-        if input_stem:
-            with torch.random.fork_rng(devices=[]):
-                self.input_stem = InputStem(half_channels, embed_channels)
-        if deep_supervision:
-            with torch.random.fork_rng(devices=[]):
-                self.aux_half = nn.Conv2d(half_channels, num_classes, 1)
-                # Decoder stages are channels-last; a linear layer is their 1x1 head.
-                self.aux_decoder = nn.ModuleList(nn.Linear(c, num_classes) for c in decoder_stage_channels)
 
-    def extract(self, image):
-        """Image -> 1/1 and 1/2 detail maps."""
-        if image.ndim != 4:
+    def forward(self, image, decoder):
+        if image.ndim != 4 or decoder.ndim != 4:
             raise ValueError("Expected BCHW image and BHWC decoder features")
-        full = self.stem_full(image)
-        return full, self.stem_half(full)
-
-    def tokens(self, half):
-        """1/2 detail -> BHWC residual added to the patch embedding."""
-        if not hasattr(self, "input_stem"):
-            raise ValueError("This branch has no input stem")
-        return self.input_stem(half)
-
-    def fuse(self, full, half, decoder, with_auxiliary=False):
-        """Residual logits; with_auxiliary also returns the 1/2 auxiliary logits."""
-        if decoder.ndim != 4:
-            raise ValueError("Expected BCHW image and BHWC decoder features")
-        batch, _, height, width = full.shape
+        batch, _, height, width = image.shape
         if (height % 4 or width % 4 or decoder.shape[0] != batch
                 or tuple(decoder.shape[1:3]) != (height // 4, width // 4)):
             raise ValueError("Decoder features must be the 1/4-resolution BHWC map of the image")
-        if with_auxiliary and not hasattr(self, "aux_half"):
-            raise ValueError("This branch has no deep supervision heads")
+        full = self.stem_full(image)
+        half = self.stem_half(full)
         semantic = self.up_half(decoder.permute(0, 3, 1, 2))
         if self.mode == "gated":
             half = self.gate_half(semantic, half)
         semantic = self.fuse_half(torch.cat((semantic, half), dim=1))
-        auxiliary = self.aux_half(semantic) if with_auxiliary else None
         semantic = self.up_full(semantic)
         if self.mode == "gated":
             full = self.gate_full(semantic, full)
         semantic = self.fuse_full(torch.cat((semantic, full), dim=1))
-        if with_auxiliary:
-            return self.head(semantic), auxiliary
         return self.head(semantic)
-
-    def decoder_auxiliary(self, stages):
-        """BHWC 1/16 and 1/8 decoder stages -> BCHW auxiliary logits, same order."""
-        if not hasattr(self, "aux_decoder") or len(stages) != len(self.aux_decoder):
-            raise ValueError("Deep supervision expects the 1/16 and 1/8 decoder stages")
-        return [head(stage).permute(0, 3, 1, 2) for head, stage in zip(self.aux_decoder, stages)]
-
-    def forward(self, image, decoder):
-        return self.fuse(*self.extract(image), decoder)

@@ -40,7 +40,6 @@ SEG/                          # git 仓库根目录
 | 输入输出封装、预训练加载 | `models/vmunet/vmunet.py::VMUNet` |
 | 编解码、跳跃连接、selective scan | `models/vmunet/vmamba.py::VSSM / VSSBlock / SS2D` |
 | 模型扩展的注册与分派 | `train_brats.py::innovation_settings / build_model`，以及 `EXTENSIONS` |
-| 方法的辅助损失 | `train_brats.py::build_criterion` 分派到扩展子包的 `loss.py`；训练态模型可返回 `(logits, 辅助输出)`，评价态只返回 logits |
 
 ## 新增模型扩展的约定
 
