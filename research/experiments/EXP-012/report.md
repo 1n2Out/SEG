@@ -1,6 +1,6 @@
 # EXP-012：完整训练：gated + 输入端补强
 
-任务：[TASK-005](../../../handoff/task-005-detail-options-full-training.md) · 想法：IDEA-001、IDEA-008
+任务：[TASK-005](../../../handoff/archive/task-005-detail-options-full-training.md) · 想法：IDEA-001、IDEA-008
 运行目录：`brats2020_detail_gated_stem_1115_1955` · 训练提交：`bb68b586df9903fb222fc6015a575e481690c07b`
 
 ## 目的

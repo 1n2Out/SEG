@@ -29,5 +29,5 @@ Mean Dice 为 83.05%，相对 EXP-001 +1.27 个百分点；ET Dice +2.44 个百�
 ## 结论与建议
 
 完整训练在验证集上有改善，单 seed 不能证明跨种子稳定性；val 用于选 best，上述患者重采样区间仅作描述。
-可以保留该完整训练结果；门控的独立贡献仍需完整 concat 对照，由用户另行决定，不自动开展新训练。
+完整 concat 对照见 [EXP-014](../EXP-014/report.md)。同一 EXP-006 权重下，输出残差削减 ET 误检的作用及误删小 ET 的反例见[验证集残差核验报告](et-residual-audit/report.md)。
 用户授权的一次 FINAL 测试单独记录于 [final/report.md](final/report.md)，不进入开发分析或实验总表。

@@ -1,6 +1,6 @@
 # EXP-006：ET 残差作用核验（仅 val）
 
-任务：[TASK-006](../../../../handoff/task-006-et-residual-audit.md)；权重及训练结果：[EXP-006](../report.md)。
+任务：[TASK-006](../../../../handoff/archive/task-006-et-residual-audit.md)；权重及训练结果：[EXP-006](../report.md)。
 推理提交：`295abb8a34b01ac3cd28dac3ce085267bcee69a6`；`best.pth` 第 95 轮；`vm_unet`、RTX 6000 GPU 3。
 
 ## 验收与复现

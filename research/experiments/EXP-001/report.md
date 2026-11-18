@@ -27,7 +27,7 @@
 - **空 ET 假阳性。**
   - 5 例空 ET 患者中有 2 例被预测出 ET。按空区域规则，每例都会让 Mean Dice 下降约 0.6 个百分点。
   - 这 2 例的 HD95 各记 373 mm，合计给 ET 的平均 HD95 贡献了约 13.6 mm。这是 ET 的 HD95 偏高的主要原因，见 [IDEA-004](../../ideas/IDEA-004-et-postprocess.md)。
-- **非空 ET 的 Dice** 为 75.09%，已经接近 4×4 块常数上限的量级。这是 [IDEA-001](../../ideas/IDEA-001-detail-fusion.md) 的动机依据。
+- **非空 ET 的 Dice** 为 75.09%。4×4 块多数投票衡量标签在粗网格下的近似误差，见 [IDEA-001 的标签分析](../../ideas/IDEA-001-detail-fusion.md)。
 
 ## 测试集
 

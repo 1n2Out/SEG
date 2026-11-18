@@ -1,17 +1,17 @@
 # TASK-006：细节支路对 ET 的逐患者修正分析
 
-状态：B 已执行，全部验收通过；后续研究建议待用户裁决。发起：A，2026-11-18。分支见 [STATE](../STATE.md)。
+状态：已关闭，B 端执行并通过验收，A 端已复核归档统计。发起：A，2026-11-18。分支见 [STATE](../../STATE.md)。
 
 ## 目的与运行清单
 
-检验 [IDEA-001](../research/ideas/IDEA-001-detail-fusion.md) 的细节支路在推理时补回了哪些 ET、消除了哪些误检，又在哪里引入错误。复用 [EXP-006](../research/experiments/EXP-006/summary.json)，只做一次完整 val 推理。
+检验 [IDEA-001](../../research/ideas/IDEA-001-detail-fusion.md) 的细节支路在推理时补回了哪些 ET、消除了哪些误检，又在哪里引入错误。复用 [EXP-006](../../research/experiments/EXP-006/summary.json)，只做一次完整 val 推理。
 
 | 项目 | 取值 |
 |---|---|
 | 权重 | `VM-UNet-main/results/brats2020_detail_gated_1113_1530/best.pth`，val best 第 95 轮 |
 | 病例 | 固定清单的 55 例 val，含全部轴向切片。50 例非空 ET 和 5 例空 ET 分开汇总 |
 | 参照 | 同一 EXP-006 前向中的主干 logits 和加残差后的最终 logits。主干与支路共同训练 |
-| 核验依据 | [EXP-006 逐患者 CSV](../research/experiments/EXP-006/val_per_patient.csv)及[评价协议](../docs/protocol.md) |
+| 核验依据 | [EXP-006 逐患者 CSV](../../research/experiments/EXP-006/val_per_patient.csv)及[评价协议](../../docs/protocol.md) |
 
 ## 步骤与验收
 
@@ -25,8 +25,8 @@ python -B analysis/et-residual-audit.py --gpus 3 &&
 python -B plot_brats.py et-residual-audit
 ```
 
-1. [专项检查](../VM-UNet-main/tests/test-et-residual-audit.py)覆盖单次前向、补边裁剪、类别映射、区域统计和出图。[分析入口](../VM-UNet-main/analysis/et-residual-audit.py)只读取固定 val 清单。
-2. B 按 [runbook](../docs/runbook.md) 选空闲 RTX 6000，通过 `--gpus` 指定。核对 checkpoint 轮次、固定划分、原配置和病例编号，每批切片一次前向取两套四类预测，还原到原始体积。范围限 val，无训练或 FINAL。
+1. [专项检查](../../VM-UNet-main/tests/test-et-residual-audit.py)覆盖单次前向、补边裁剪、类别映射、区域统计和出图。[分析入口](../../VM-UNet-main/analysis/et-residual-audit.py)只读取固定 val 清单。
+2. B 按 [runbook](../../docs/runbook.md) 选空闲 RTX 6000，通过 `--gpus` 指定。核对 checkpoint 轮次、固定划分、原配置和病例编号，每批切片一次前向取两套四类预测，还原到原始体积。范围限 val，无训练或 FINAL。
 3. 验收最终预测：逐例核对归档 CSV 的 WT/TC/ET 标注及预测体素数、Dice。整数应一致，浮点仅容许数值舍入误差；有差异先记录病例并排查权重、推理设置及映射，再解释修正结果。
 4. 每位患者按下表计数，记录修正前后 ET Dice、预测体积和每种翻转的原始标签转移。四项计数之和应等于两张 ET 掩膜异或的体素数。
 
@@ -56,4 +56,4 @@ python -B plot_brats.py et-residual-audit
 
 - **实际执行：** 提交 `295abb8a34b01ac3cd28dac3ce085267bcee69a6`、EXP-006 第 95 轮 `best.pth`，`vm_unet`、RTX 6000 GPU 3；按上述三条命令执行。产物 `results/analysis/task-006/`，图为四组 PNG/PDF/SVG；日志 `logs/task-006-{et-residual-audit,plot,summary}.log`。
 - **验收：** 专项检查 3 passed；55 例 WT/TC/ET 体素数与归档完全一致、Dice 误差不超过 `1e-12`；820 行区域及 1,122 行转移表计数、体积守恒和配对汇总通过离线交叉核验。无推理异常；绘图缓存目录警告未影响产物，未改模型或协议，未训练、未执行 FINAL。
-- **结论：** 见 [报告与统计归档](../research/experiments/EXP-006/et-residual-audit/report.md)。主要作用为 ET 误检抑制，非空组 46 升/2 降/2 平，同时存在小 ET 抹除；不能把共同训练主干的残差前后差值当成独立 baseline 提升。离线核验源码 `analysis/summarize-et-residual-audit.py`，命令 `python -B analysis/summarize-et-residual-audit.py`；建议同时披露收益与反例，后续结构由用户决定；用户已明确授权本轮提交和推送。
+- **结论：** 见 [报告与统计归档](../../research/experiments/EXP-006/et-residual-audit/report.md)。主要作用为 ET 误检抑制，非空组 46 升/2 降/2 平，同时存在小 ET 抹除；不能把共同训练主干的残差前后差值当成独立 baseline 提升。离线核验源码 `analysis/summarize-et-residual-audit.py`，命令 `python -B analysis/summarize-et-residual-audit.py`；建议同时披露收益与反例，后续结构由用户决定；用户已明确授权本轮提交和推送。

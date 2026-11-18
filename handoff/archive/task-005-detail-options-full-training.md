@@ -1,6 +1,6 @@
 # TASK-005：细节回注选项的完整训练（深监督、输入端补强、门控消融）
 
-状态：已执行，待用户裁决 · 想法：[IDEA-007](../research/ideas/IDEA-007-deep-supervision.md)、[IDEA-008](../research/ideas/IDEA-008-input-stem.md)（基座 IDEA-001） · 发起：A，2026-11-15 · 分支：见 STATE.md
+状态：已执行并关闭归档 · 想法：[IDEA-007](../../research/ideas/IDEA-007-deep-supervision.md)、[IDEA-008](../../research/ideas/IDEA-008-input-stem.md)（基座 IDEA-001） · 发起：A，2026-11-15 · 分支：见 [STATE](../../STATE.md)
 
 ## 目的
 
@@ -55,6 +55,6 @@ Mean HD95 逐项报告，不作门槛：它由少数病例主导（见 IDEA-005 
 - **运行目录（相对 `VM-UNet-main/results/`）：** EXP-011：`brats2020_detail_gated_ds_1115_1955`；EXP-012：`brats2020_detail_gated_stem_1115_1955`。
   EXP-013：`brats2020_detail_gated_ds_stem_1115_1955`；EXP-014：`brats2020_detail_concat_1115_1955`。四项正常结束，EXP-011/013 按协议早停。
 - **异常与修复：** RTX 6000 GPU 2、4、5 有其他进程，按用户授权改用 GPU 3 串行；队列脚本、日志、JSON 为 `VM-UNet-main/logs/task-005-queue.{py,log,json}`，每次启动前核对源码与空闲状态，失败即停；无代码修复。
-- **检查结果：** CPU 74 passed、CUDA 8 passed、双进程 2 passed，无 skipped；4 个配置均完成 smoke 前后向与 1 例 val，4 组正式训练 dry-run 输出目录已核对。日志见 STATE。
-- **结论：** [EXP-011](../research/experiments/EXP-011/report.md) 四条件为否/是/是/是，[EXP-012](../research/experiments/EXP-012/report.md) 为否/否/是/是，[EXP-013](../research/experiments/EXP-013/report.md) 为否/否/否/是，均未通过；[EXP-014](../research/experiments/EXP-014/report.md) 比 gated 的 Mean Dice 低 0.83 个百分点，门控达到贡献门槛。均按 val best 收集，未执行 FINAL。
+- **检查结果：** CPU 74 passed、CUDA 8 passed、双进程 2 passed，无 skipped；4 个配置均完成 smoke 前后向与 1 例 val，4 组正式训练 dry-run 输出目录已核对。日志路径见上方回执。
+- **结论：** [EXP-011](../../research/experiments/EXP-011/report.md) 四条件为否/是/是/是，[EXP-012](../../research/experiments/EXP-012/report.md) 为否/否/是/是，[EXP-013](../../research/experiments/EXP-013/report.md) 为否/否/否/是，均未通过；[EXP-014](../../research/experiments/EXP-014/report.md) 比 gated 的 Mean Dice 低 0.83 个百分点，门控达到贡献门槛。均按 val best 收集，未执行 FINAL。
 - **建议：** 保留 EXP-006，不调参重跑。门控优势中约 0.61 个百分点来自 concat 多出一例空 ET 假阳性，非空 ET 平均 Dice 则是 concat 略高，论文须限定为本次单种子消融；最终方法与表述交用户裁决。分析源码 `analysis/compare-detail-options.py` 随回执入库，结果见 `results/analysis/task-005/`。

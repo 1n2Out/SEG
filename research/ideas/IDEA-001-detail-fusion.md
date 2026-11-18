@@ -29,19 +29,20 @@
 
 - **Swin-UMamba（MICCAI 2024）** 在 Mamba 编码器前加了步长 2 的卷积 stem，并从输入直接接一条全分辨率跳跃连接；**U-Net v2 / VM-UNetV2** 研究语义与细节特征的融合。
 - **门控：** 沿用 EMCAD（CVPR 2024）的 LGAG。
-- **贡献定位：** 卷积细节支路和门控都是已有组件，不能当作原创贡献。可以讲的是"以量化的 patch 分辨率瓶颈为依据、面向薄层 ET 的改造"。原创性还需要进一步核查文献。
+- **贡献定位。** 粗网格下 ET 标签的近似损失为结构设计提供动机。在 VM-UNet 解码端逐级融合原图细节，并以残差修正分割输出；卷积支路和 LGAG 门控均有既有工作基础。
 
 ## 验证记录
 
 - 热启动筛选（[TASK-001](../../handoff/archive/task-001-detail-fusion-screening.md)）通过，对照为同样微调 10 轮的 baseline。
 - 完整训练（[TASK-002](../../handoff/archive/task-002-detail-gated-full-training.md)）的验证集结果见 EXP-006。
-- 同一 EXP-006 权重下，残差修正前后的 ET 病例配对与边界分区诊断见 [TASK-006](../../handoff/task-006-et-residual-audit.md)。
+- 同一 EXP-006 权重下，残差修正前后的逐患者与分区统计已通过 [TASK-006](../../handoff/archive/task-006-et-residual-audit.md) 核验。
 
 ## 结论
 
 2026-11-15 采纳为第二项工作的正式创新点，后续优化以 EXP-006 为基座和对照。
 
-- **验证集：** 完整训练有收益，见 [EXP-006](../experiments/EXP-006/report.md)。
+- **完整模型效果。** 同一训练协议下，EXP-006 相对独立训练的 EXP-001 提升了验证集 Mean Dice 和 ET Dice。[完整训练对照](../experiments/EXP-006/report.md)
+- **残差的直接作用。** 在固定 EXP-006 权重的验证集诊断中，残差主要削减共同训练主干的 ET 误检，多数非空 ET 患者受益。修正也删去部分真实 ET，包含小病灶最终预测为空的反例。该比较只衡量同一模型内部的输出变化。[逐患者核验报告](../experiments/EXP-006/et-residual-audit/report.md)
 - **测试集：** 只评价过一次，见 [FINAL 报告](../experiments/EXP-006/final/report.md)。Dice 提升且 ET 最明显；Mean HD95 未同步改善，患者重采样区间跨 0，论文须如实呈现。
 - **门控：** concat 完整训练见 [EXP-014](../experiments/EXP-014/report.md)，Mean Dice 比 gated 低 0.83 个百分点；其中约 0.61 来自一例空 ET 假阳性，非空 ET 平均 Dice 是 concat 略高。
 - **叠加件：** [IDEA-005](IDEA-005-boundary-supervision.md)、[IDEA-006](IDEA-006-slice-context.md) 筛选未通过，已放弃；[IDEA-007](IDEA-007-deep-supervision.md)（深监督）和 [IDEA-008](IDEA-008-input-stem.md)（输入端补强）完整训练未通过，已放弃。

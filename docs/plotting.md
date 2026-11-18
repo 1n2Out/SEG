@@ -54,4 +54,4 @@ python plot_brats.py detail-motivation
 
 ## ET 残差修正 `et-residual-audit`
 
-`python plot_brats.py et-residual-audit` 从 [TASK-006](../handoff/task-006-et-residual-audit.md) 的核验产物绘图。分区柱高为机会数大于零的患者的平均翻转率，标签 n 是参与该柱统计的患者数。病例图在同一张 T1ce 切片叠加真值 ET、主干 ET 和最终 ET，输出位于分析目录的 `figures/`。
+`python plot_brats.py et-residual-audit` 从 [TASK-006](../handoff/archive/task-006-et-residual-audit.md) 的核验产物绘图。分区柱高为机会数大于零的患者的平均翻转率，标签 n 是参与该柱统计的患者数。病例图在同一张 T1ce 切片叠加真值 ET、主干 ET 和最终 ET，输出位于分析目录的 `figures/`。

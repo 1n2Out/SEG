@@ -1,6 +1,6 @@
 # IDEA-008：输入端卷积补强（与细节支路共享）
 
-状态：**放弃** · 基座：[IDEA-001](IDEA-001-detail-fusion.md) · 任务：[TASK-005](../../handoff/task-005-detail-options-full-training.md) · 决定：[decisions](../decisions.md) 2026-11-15、2026-11-18
+状态：**放弃** · 基座：[IDEA-001](IDEA-001-detail-fusion.md) · 任务：[TASK-005](../../handoff/archive/task-005-detail-options-full-training.md) · 决定：[decisions](../decisions.md) 2026-11-15、2026-11-18
 
 > A 已于 2026-11-15 接触测试集。本 IDEA 的动机只来自模型结构分析和业界通行做法，不来自测试集现象。
 

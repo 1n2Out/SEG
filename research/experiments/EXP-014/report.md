@@ -1,6 +1,6 @@
 # EXP-014：完整训练：detail concat
 
-任务：[TASK-005](../../../handoff/task-005-detail-options-full-training.md) · 想法：IDEA-001（门控消融）
+任务：[TASK-005](../../../handoff/archive/task-005-detail-options-full-training.md) · 想法：IDEA-001（门控消融）
 运行目录：`brats2020_detail_concat_1115_1955` · 训练提交：`bb68b586df9903fb222fc6015a575e481690c07b`
 
 ## 目的
