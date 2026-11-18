@@ -1,0 +1,253 @@
+{
+  "provenance": {
+    "git": {
+      "commit": "295abb8a34b01ac3cd28dac3ce085267bcee69a6",
+      "branch": "stage003-detail-stacking",
+      "dirty": false,
+      "changes": []
+    },
+    "split": "val",
+    "manifest_sha256": "947f8678605903ce2abf686cf93eddfb4a4357d9c6539ddd67f983fddd5d8ca7",
+    "checkpoint": "/home/hzh/hwh/Seg/VM-UNet-main/results/brats2020_detail_gated_1113_1530/best.pth",
+    "epoch": 95,
+    "gpu": "NVIDIA RTX 6000 Ada Generation",
+    "torch": "2.0.1+cu118",
+    "reference_sha256": "ce182c40efd1c6d354352901a5d31fa6a5cdfb219eb69acd1af4129d3c268835",
+    "script_sha256": "1cbc4f457803efb1997c539f772500dc86c7abacf23ed149817bd4a2632d8ab7"
+  },
+  "paired": {
+    "all": {
+      "n": 55,
+      "mean_pp": 33.93765801219255,
+      "median_pp": 32.91554573165419,
+      "gains": 49,
+      "losses": 2,
+      "ties": 4
+    },
+    "nonempty": {
+      "n": 50,
+      "mean_pp": 31.331423813411803,
+      "median_pp": 32.79683753368851,
+      "gains": 46,
+      "losses": 2,
+      "ties": 2
+    },
+    "empty": {
+      "n": 5,
+      "mean_pp": 60.0,
+      "median_pp": 100.0,
+      "gains": 3,
+      "losses": 0,
+      "ties": 2
+    }
+  },
+  "selected": {
+    "gain": "BraTS20_Training_100",
+    "typical": "BraTS20_Training_232",
+    "loss": "BraTS20_Training_298"
+  },
+  "regional_rates": [
+    {
+      "zone": "interior",
+      "action": "recover",
+      "valid_patients": 36,
+      "mean_rate": 0.032714890186953144
+    },
+    {
+      "zone": "interior",
+      "action": "remove-fp",
+      "valid_patients": 0,
+      "mean_rate": null
+    },
+    {
+      "zone": "interior",
+      "action": "lose",
+      "valid_patients": 47,
+      "mean_rate": 0.03966141130300357
+    },
+    {
+      "zone": "interior",
+      "action": "add-fp",
+      "valid_patients": 0,
+      "mean_rate": null
+    },
+    {
+      "zone": "inner-boundary",
+      "action": "recover",
+      "valid_patients": 47,
+      "mean_rate": 0.009970907479233451
+    },
+    {
+      "zone": "inner-boundary",
+      "action": "remove-fp",
+      "valid_patients": 0,
+      "mean_rate": null
+    },
+    {
+      "zone": "inner-boundary",
+      "action": "lose",
+      "valid_patients": 48,
+      "mean_rate": 0.21679108558699733
+    },
+    {
+      "zone": "inner-boundary",
+      "action": "add-fp",
+      "valid_patients": 0,
+      "mean_rate": null
+    },
+    {
+      "zone": "outer-boundary",
+      "action": "recover",
+      "valid_patients": 0,
+      "mean_rate": null
+    },
+    {
+      "zone": "outer-boundary",
+      "action": "remove-fp",
+      "valid_patients": 48,
+      "mean_rate": 0.7571027008301542
+    },
+    {
+      "zone": "outer-boundary",
+      "action": "lose",
+      "valid_patients": 0,
+      "mean_rate": null
+    },
+    {
+      "zone": "outer-boundary",
+      "action": "add-fp",
+      "valid_patients": 49,
+      "mean_rate": 0.0008529003408061681
+    },
+    {
+      "zone": "outside",
+      "action": "recover",
+      "valid_patients": 0,
+      "mean_rate": null
+    },
+    {
+      "zone": "outside",
+      "action": "remove-fp",
+      "valid_patients": 50,
+      "mean_rate": 0.9600085622680313
+    },
+    {
+      "zone": "outside",
+      "action": "lose",
+      "valid_patients": 0,
+      "mean_rate": null
+    },
+    {
+      "zone": "outside",
+      "action": "add-fp",
+      "valid_patients": 50,
+      "mean_rate": 6.729179254146677e-07
+    },
+    {
+      "zone": "empty-et",
+      "action": "recover",
+      "valid_patients": 0,
+      "mean_rate": null
+    },
+    {
+      "zone": "empty-et",
+      "action": "remove-fp",
+      "valid_patients": 5,
+      "mean_rate": 0.8960185651663011
+    },
+    {
+      "zone": "empty-et",
+      "action": "lose",
+      "valid_patients": 0,
+      "mean_rate": null
+    },
+    {
+      "zone": "empty-et",
+      "action": "add-fp",
+      "valid_patients": 5,
+      "mean_rate": 7.5419123259425955e-06
+    }
+  ],
+  "empty_et": [
+    {
+      "case_id": "BraTS20_Training_268",
+      "target_et": 0,
+      "trunk_et": 65,
+      "final_et": 0,
+      "trunk_dice": 0.0,
+      "final_dice": 1.0,
+      "delta_pp": 100.0,
+      "trunk_et_present": true,
+      "final_et_present": false,
+      "slice_z": 61,
+      "recover": 0,
+      "remove-fp": 65,
+      "lose": 0,
+      "add-fp": 0
+    },
+    {
+      "case_id": "BraTS20_Training_272",
+      "target_et": 0,
+      "trunk_et": 5006,
+      "final_et": 694,
+      "trunk_dice": 0.0,
+      "final_dice": 0.0,
+      "delta_pp": 0.0,
+      "trunk_et_present": true,
+      "final_et_present": true,
+      "slice_z": 41,
+      "recover": 0,
+      "remove-fp": 4312,
+      "lose": 0,
+      "add-fp": 0
+    },
+    {
+      "case_id": "BraTS20_Training_281",
+      "target_et": 0,
+      "trunk_et": 17793,
+      "final_et": 7120,
+      "trunk_dice": 0.0,
+      "final_dice": 0.0,
+      "delta_pp": 0.0,
+      "trunk_et_present": true,
+      "final_et_present": true,
+      "slice_z": 96,
+      "recover": 0,
+      "remove-fp": 11009,
+      "lose": 0,
+      "add-fp": 336
+    },
+    {
+      "case_id": "BraTS20_Training_321",
+      "target_et": 0,
+      "trunk_et": 205,
+      "final_et": 0,
+      "trunk_dice": 0.0,
+      "final_dice": 1.0,
+      "delta_pp": 100.0,
+      "trunk_et_present": true,
+      "final_et_present": false,
+      "slice_z": 97,
+      "recover": 0,
+      "remove-fp": 205,
+      "lose": 0,
+      "add-fp": 0
+    },
+    {
+      "case_id": "BraTS20_Training_330",
+      "target_et": 0,
+      "trunk_et": 737,
+      "final_et": 0,
+      "trunk_dice": 0.0,
+      "final_dice": 1.0,
+      "delta_pp": 100.0,
+      "trunk_et_present": true,
+      "final_et_present": false,
+      "slice_z": 36,
+      "recover": 0,
+      "remove-fp": 737,
+      "lose": 0,
+      "add-fp": 0
+    }
+  ]
+}

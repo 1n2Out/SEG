@@ -1,0 +1,599 @@
+{
+  "input_sha256": {
+    "summary.json": "24ecaadc5f84a6f4f08ee42b6fa2d1ede25b5aa2347610765a93946db365e79a",
+    "patients.csv": "9a9d8ab71193b6ee0fcd9a2358da8aac2dec8bf56da946396e44c4d2d2e608ae",
+    "regions.csv": "c23e2d84751f29f728e6e0e0f65e4907480209a22a6ac0f39e3da9cb8f1816a5",
+    "transitions.csv": "557e49ffbf66745ac4b3eca4aeaafb6d0aecaffd2158125305cb95deac57b981"
+  },
+  "script_sha256": "615d1c9b439e28da0638f115a41fee5d2f3e371f40dc4261730a13dfcd1a3b67",
+  "checks": {
+    "patients": 55,
+    "regional_rows": 820,
+    "transition_rows": 1122,
+    "archived_et_match": true,
+    "counts_reconcile": true,
+    "paired_summary_match": true
+  },
+  "groups": {
+    "all": {
+      "paired": {
+        "n": 55,
+        "mean_pp": 33.93765801219255,
+        "median_pp": 32.91554573165419,
+        "gains": 49,
+        "losses": 2,
+        "ties": 4
+      },
+      "trunk_dice_percent": 42.22104707066464,
+      "final_dice_percent": 76.15870508285717,
+      "action_voxels": {
+        "recover": 108,
+        "remove-fp": 2057895,
+        "lose": 114888,
+        "add-fp": 646
+      },
+      "regional_voxels": {
+        "interior": {
+          "recover": 64,
+          "remove-fp": 0,
+          "lose": 27194,
+          "add-fp": 0
+        },
+        "inner-boundary": {
+          "recover": 44,
+          "remove-fp": 0,
+          "lose": 87694,
+          "add-fp": 0
+        },
+        "outer-boundary": {
+          "recover": 0,
+          "remove-fp": 389735,
+          "lose": 0,
+          "add-fp": 14
+        },
+        "outside": {
+          "recover": 0,
+          "remove-fp": 1651832,
+          "lose": 0,
+          "add-fp": 296
+        },
+        "empty-et": {
+          "recover": 0,
+          "remove-fp": 16328,
+          "lose": 0,
+          "add-fp": 336
+        }
+      },
+      "label_transitions": [
+        {
+          "action": "add-fp",
+          "truth": 0,
+          "trunk": 0,
+          "final": 4,
+          "count": 40
+        },
+        {
+          "action": "add-fp",
+          "truth": 0,
+          "trunk": 1,
+          "final": 4,
+          "count": 56
+        },
+        {
+          "action": "add-fp",
+          "truth": 0,
+          "trunk": 2,
+          "final": 4,
+          "count": 6
+        },
+        {
+          "action": "add-fp",
+          "truth": 1,
+          "trunk": 0,
+          "final": 4,
+          "count": 6
+        },
+        {
+          "action": "add-fp",
+          "truth": 1,
+          "trunk": 1,
+          "final": 4,
+          "count": 2
+        },
+        {
+          "action": "add-fp",
+          "truth": 1,
+          "trunk": 2,
+          "final": 4,
+          "count": 91
+        },
+        {
+          "action": "add-fp",
+          "truth": 2,
+          "trunk": 0,
+          "final": 4,
+          "count": 40
+        },
+        {
+          "action": "add-fp",
+          "truth": 2,
+          "trunk": 1,
+          "final": 4,
+          "count": 104
+        },
+        {
+          "action": "add-fp",
+          "truth": 2,
+          "trunk": 2,
+          "final": 4,
+          "count": 301
+        },
+        {
+          "action": "lose",
+          "truth": 4,
+          "trunk": 4,
+          "final": 0,
+          "count": 26253
+        },
+        {
+          "action": "lose",
+          "truth": 4,
+          "trunk": 4,
+          "final": 1,
+          "count": 47736
+        },
+        {
+          "action": "lose",
+          "truth": 4,
+          "trunk": 4,
+          "final": 2,
+          "count": 40899
+        },
+        {
+          "action": "recover",
+          "truth": 4,
+          "trunk": 0,
+          "final": 4,
+          "count": 70
+        },
+        {
+          "action": "recover",
+          "truth": 4,
+          "trunk": 1,
+          "final": 4,
+          "count": 14
+        },
+        {
+          "action": "recover",
+          "truth": 4,
+          "trunk": 2,
+          "final": 4,
+          "count": 24
+        },
+        {
+          "action": "remove-fp",
+          "truth": 0,
+          "trunk": 4,
+          "final": 0,
+          "count": 711540
+        },
+        {
+          "action": "remove-fp",
+          "truth": 0,
+          "trunk": 4,
+          "final": 1,
+          "count": 16316
+        },
+        {
+          "action": "remove-fp",
+          "truth": 0,
+          "trunk": 4,
+          "final": 2,
+          "count": 63157
+        },
+        {
+          "action": "remove-fp",
+          "truth": 1,
+          "trunk": 4,
+          "final": 0,
+          "count": 16554
+        },
+        {
+          "action": "remove-fp",
+          "truth": 1,
+          "trunk": 4,
+          "final": 1,
+          "count": 501026
+        },
+        {
+          "action": "remove-fp",
+          "truth": 1,
+          "trunk": 4,
+          "final": 2,
+          "count": 39097
+        },
+        {
+          "action": "remove-fp",
+          "truth": 2,
+          "trunk": 4,
+          "final": 0,
+          "count": 85748
+        },
+        {
+          "action": "remove-fp",
+          "truth": 2,
+          "trunk": 4,
+          "final": 1,
+          "count": 42000
+        },
+        {
+          "action": "remove-fp",
+          "truth": 2,
+          "trunk": 4,
+          "final": 2,
+          "count": 582457
+        }
+      ]
+    },
+    "nonempty": {
+      "paired": {
+        "n": 50,
+        "mean_pp": 31.331423813411803,
+        "median_pp": 32.79683753368851,
+        "gains": 46,
+        "losses": 2,
+        "ties": 2
+      },
+      "trunk_dice_percent": 46.443151777731096,
+      "final_dice_percent": 77.77457559114289,
+      "action_voxels": {
+        "recover": 108,
+        "remove-fp": 2041567,
+        "lose": 114888,
+        "add-fp": 310
+      },
+      "regional_voxels": {
+        "interior": {
+          "recover": 64,
+          "remove-fp": 0,
+          "lose": 27194,
+          "add-fp": 0
+        },
+        "inner-boundary": {
+          "recover": 44,
+          "remove-fp": 0,
+          "lose": 87694,
+          "add-fp": 0
+        },
+        "outer-boundary": {
+          "recover": 0,
+          "remove-fp": 389735,
+          "lose": 0,
+          "add-fp": 14
+        },
+        "outside": {
+          "recover": 0,
+          "remove-fp": 1651832,
+          "lose": 0,
+          "add-fp": 296
+        }
+      },
+      "label_transitions": [
+        {
+          "action": "add-fp",
+          "truth": 0,
+          "trunk": 0,
+          "final": 4,
+          "count": 40
+        },
+        {
+          "action": "add-fp",
+          "truth": 0,
+          "trunk": 1,
+          "final": 4,
+          "count": 13
+        },
+        {
+          "action": "add-fp",
+          "truth": 0,
+          "trunk": 2,
+          "final": 4,
+          "count": 6
+        },
+        {
+          "action": "add-fp",
+          "truth": 1,
+          "trunk": 0,
+          "final": 4,
+          "count": 6
+        },
+        {
+          "action": "add-fp",
+          "truth": 1,
+          "trunk": 1,
+          "final": 4,
+          "count": 2
+        },
+        {
+          "action": "add-fp",
+          "truth": 1,
+          "trunk": 2,
+          "final": 4,
+          "count": 91
+        },
+        {
+          "action": "add-fp",
+          "truth": 2,
+          "trunk": 0,
+          "final": 4,
+          "count": 40
+        },
+        {
+          "action": "add-fp",
+          "truth": 2,
+          "trunk": 1,
+          "final": 4,
+          "count": 62
+        },
+        {
+          "action": "add-fp",
+          "truth": 2,
+          "trunk": 2,
+          "final": 4,
+          "count": 50
+        },
+        {
+          "action": "lose",
+          "truth": 4,
+          "trunk": 4,
+          "final": 0,
+          "count": 26253
+        },
+        {
+          "action": "lose",
+          "truth": 4,
+          "trunk": 4,
+          "final": 1,
+          "count": 47736
+        },
+        {
+          "action": "lose",
+          "truth": 4,
+          "trunk": 4,
+          "final": 2,
+          "count": 40899
+        },
+        {
+          "action": "recover",
+          "truth": 4,
+          "trunk": 0,
+          "final": 4,
+          "count": 70
+        },
+        {
+          "action": "recover",
+          "truth": 4,
+          "trunk": 1,
+          "final": 4,
+          "count": 14
+        },
+        {
+          "action": "recover",
+          "truth": 4,
+          "trunk": 2,
+          "final": 4,
+          "count": 24
+        },
+        {
+          "action": "remove-fp",
+          "truth": 0,
+          "trunk": 4,
+          "final": 0,
+          "count": 707490
+        },
+        {
+          "action": "remove-fp",
+          "truth": 0,
+          "trunk": 4,
+          "final": 1,
+          "count": 15759
+        },
+        {
+          "action": "remove-fp",
+          "truth": 0,
+          "trunk": 4,
+          "final": 2,
+          "count": 62368
+        },
+        {
+          "action": "remove-fp",
+          "truth": 1,
+          "trunk": 4,
+          "final": 0,
+          "count": 16508
+        },
+        {
+          "action": "remove-fp",
+          "truth": 1,
+          "trunk": 4,
+          "final": 1,
+          "count": 500181
+        },
+        {
+          "action": "remove-fp",
+          "truth": 1,
+          "trunk": 4,
+          "final": 2,
+          "count": 38835
+        },
+        {
+          "action": "remove-fp",
+          "truth": 2,
+          "trunk": 4,
+          "final": 0,
+          "count": 85368
+        },
+        {
+          "action": "remove-fp",
+          "truth": 2,
+          "trunk": 4,
+          "final": 1,
+          "count": 35183
+        },
+        {
+          "action": "remove-fp",
+          "truth": 2,
+          "trunk": 4,
+          "final": 2,
+          "count": 579875
+        }
+      ]
+    },
+    "empty": {
+      "paired": {
+        "n": 5,
+        "mean_pp": 60.0,
+        "median_pp": 100.0,
+        "gains": 3,
+        "losses": 0,
+        "ties": 2
+      },
+      "trunk_dice_percent": 0.0,
+      "final_dice_percent": 60.0,
+      "action_voxels": {
+        "recover": 0,
+        "remove-fp": 16328,
+        "lose": 0,
+        "add-fp": 336
+      },
+      "regional_voxels": {
+        "empty-et": {
+          "recover": 0,
+          "remove-fp": 16328,
+          "lose": 0,
+          "add-fp": 336
+        }
+      },
+      "label_transitions": [
+        {
+          "action": "add-fp",
+          "truth": 0,
+          "trunk": 1,
+          "final": 4,
+          "count": 43
+        },
+        {
+          "action": "add-fp",
+          "truth": 2,
+          "trunk": 1,
+          "final": 4,
+          "count": 42
+        },
+        {
+          "action": "add-fp",
+          "truth": 2,
+          "trunk": 2,
+          "final": 4,
+          "count": 251
+        },
+        {
+          "action": "remove-fp",
+          "truth": 0,
+          "trunk": 4,
+          "final": 0,
+          "count": 4050
+        },
+        {
+          "action": "remove-fp",
+          "truth": 0,
+          "trunk": 4,
+          "final": 1,
+          "count": 557
+        },
+        {
+          "action": "remove-fp",
+          "truth": 0,
+          "trunk": 4,
+          "final": 2,
+          "count": 789
+        },
+        {
+          "action": "remove-fp",
+          "truth": 1,
+          "trunk": 4,
+          "final": 0,
+          "count": 46
+        },
+        {
+          "action": "remove-fp",
+          "truth": 1,
+          "trunk": 4,
+          "final": 1,
+          "count": 845
+        },
+        {
+          "action": "remove-fp",
+          "truth": 1,
+          "trunk": 4,
+          "final": 2,
+          "count": 262
+        },
+        {
+          "action": "remove-fp",
+          "truth": 2,
+          "trunk": 4,
+          "final": 0,
+          "count": 380
+        },
+        {
+          "action": "remove-fp",
+          "truth": 2,
+          "trunk": 4,
+          "final": 1,
+          "count": 6817
+        },
+        {
+          "action": "remove-fp",
+          "truth": 2,
+          "trunk": 4,
+          "final": 2,
+          "count": 2582
+        }
+      ]
+    }
+  },
+  "losses": [
+    {
+      "case_id": "BraTS20_Training_298",
+      "target_et": "94",
+      "trunk_et": "50",
+      "final_et": "0",
+      "trunk_dice": "0.05555555555555555",
+      "final_dice": "0.0",
+      "delta_pp": "-5.555555555555555",
+      "trunk_et_present": "True",
+      "final_et_present": "False",
+      "slice_z": "70",
+      "recover": "0",
+      "remove-fp": "46",
+      "lose": "4",
+      "add-fp": "0"
+    },
+    {
+      "case_id": "BraTS20_Training_299",
+      "target_et": "659",
+      "trunk_et": "1125",
+      "final_et": "119",
+      "trunk_dice": "0.31390134529147984",
+      "final_dice": "0.3033419023136247",
+      "delta_pp": "-1.055944297785516",
+      "trunk_et_present": "True",
+      "final_et_present": "True",
+      "slice_z": "87",
+      "recover": "0",
+      "remove-fp": "844",
+      "lose": "162",
+      "add-fp": "0"
+    }
+  ]
+}

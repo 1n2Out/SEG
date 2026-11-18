@@ -1,6 +1,6 @@
 # TASK-006：细节支路对 ET 的逐患者修正分析
 
-状态：A 端专项 CPU 检查 3 项通过，待 B 端执行。发起：A，2026-11-18。分支见 [STATE](../STATE.md)。
+状态：B 已执行，全部验收通过；后续研究建议待用户裁决。发起：A，2026-11-18。分支见 [STATE](../STATE.md)。
 
 ## 目的与运行清单
 
@@ -54,6 +54,6 @@ python -B plot_brats.py et-residual-audit
 
 ## 回执（B 填写）
 
-- 实际提交、checkpoint、运行命令与产物目录：
-- 最终预测复现核验、计数校验及异常：
-- 逐患者结论、反例与建议：
+- **实际执行：** 提交 `295abb8a34b01ac3cd28dac3ce085267bcee69a6`、EXP-006 第 95 轮 `best.pth`，`vm_unet`、RTX 6000 GPU 3；按上述三条命令执行。产物 `results/analysis/task-006/`，图为四组 PNG/PDF/SVG；日志 `logs/task-006-{et-residual-audit,plot,summary}.log`。
+- **验收：** 专项检查 3 passed；55 例 WT/TC/ET 体素数与归档完全一致、Dice 误差不超过 `1e-12`；820 行区域及 1,122 行转移表计数、体积守恒和配对汇总通过离线交叉核验。无推理异常；绘图缓存目录警告未影响产物，未改模型或协议，未训练、未执行 FINAL。
+- **结论：** 见 [报告与统计归档](../research/experiments/EXP-006/et-residual-audit/report.md)。主要作用为 ET 误检抑制，非空组 46 升/2 降/2 平，同时存在小 ET 抹除；不能把共同训练主干的残差前后差值当成独立 baseline 提升。离线核验源码 `analysis/summarize-et-residual-audit.py`，命令 `python -B analysis/summarize-et-residual-audit.py`；建议同时披露收益与反例，后续结构由用户决定；用户已明确授权本轮提交和推送。
