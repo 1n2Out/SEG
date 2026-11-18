@@ -1,0 +1,54 @@
+{
+  "exp": "EXP-013",
+  "title": "完整训练：gated + 深监督 + 输入端补强",
+  "run_dir": "brats2020_detail_gated_ds_stem_1115_1955",
+  "collected_at": "2026-11-18T10:50:57+08:00",
+  "git": {
+    "commit": "bb68b586df9903fb222fc6015a575e481690c07b",
+    "branch": "stage003-detail-stacking",
+    "dirty": true,
+    "changes": [
+      " M STATE.md",
+      " M handoff/task-005-detail-options-full-training.md"
+    ]
+  },
+  "config": {
+    "epochs": 100,
+    "batch_size": 16,
+    "learning_rate": 0.0001,
+    "pretrained": "vmamba_small_e238_ema.pth",
+    "warm_start": null,
+    "extension": {
+      "detail_fusion": {
+        "mode": "gated",
+        "full_channels": 16,
+        "half_channels": 32,
+        "deep_supervision": true,
+        "input_stem": true
+      }
+    }
+  },
+  "epochs_completed": 85,
+  "train_hours": 11.92,
+  "parameters": 27566046,
+  "selected_epoch": 35,
+  "selection": "best",
+  "val": {
+    "mean_dice": 0.8266652263582145,
+    "mean_hd95_mm": 19.470407509809885,
+    "WT": {
+      "dice": 0.9053206914591773,
+      "hd95_mm": 7.235834980558391
+    },
+    "TC": {
+      "dice": 0.8262038216487188,
+      "hd95_mm": 7.582539766353971
+    },
+    "ET": {
+      "dice": 0.7484711659667476,
+      "hd95_mm": 43.592847782517296
+    },
+    "et_empty_false_positive": "2/5",
+    "et_nonempty_dice": 0.7633182825634225
+  }
+}

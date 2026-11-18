@@ -1,0 +1,54 @@
+{
+  "exp": "EXP-014",
+  "title": "完整训练：detail concat",
+  "run_dir": "brats2020_detail_concat_1115_1955",
+  "collected_at": "2026-11-18T10:50:57+08:00",
+  "git": {
+    "commit": "bb68b586df9903fb222fc6015a575e481690c07b",
+    "branch": "stage003-detail-stacking",
+    "dirty": true,
+    "changes": [
+      " M STATE.md",
+      " M handoff/task-005-detail-options-full-training.md"
+    ]
+  },
+  "config": {
+    "epochs": 100,
+    "batch_size": 16,
+    "learning_rate": 0.0001,
+    "pretrained": "vmamba_small_e238_ema.pth",
+    "warm_start": null,
+    "extension": {
+      "detail_fusion": {
+        "mode": "concat",
+        "full_channels": 16,
+        "half_channels": 32,
+        "deep_supervision": false,
+        "input_stem": false
+      }
+    }
+  },
+  "epochs_completed": 100,
+  "train_hours": 12.77,
+  "parameters": 27498648,
+  "selected_epoch": 75,
+  "selection": "best",
+  "val": {
+    "mean_dice": 0.8222511784738137,
+    "mean_hd95_mm": 20.529996449576785,
+    "WT": {
+      "dice": 0.9062254074868726,
+      "hd95_mm": 7.317532860311858
+    },
+    "TC": {
+      "dice": 0.8148945725799581,
+      "hd95_mm": 9.112084524682945
+    },
+    "ET": {
+      "dice": 0.7456335553546104,
+      "hd95_mm": 45.16037196373555
+    },
+    "et_empty_false_positive": "3/5",
+    "et_nonempty_dice": 0.7801969108900713
+  }
+}
