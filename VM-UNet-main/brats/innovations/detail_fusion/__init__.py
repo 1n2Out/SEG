@@ -16,12 +16,17 @@ def resolve_settings(settings):
             if settings.pop(name) is not False:
                 raise ValueError("detail_fusion." + name + " has been retired (IDEA-007/008); restore "
                                  "its source from git commit 6785299 to evaluate or resume old runs")
+    rollback = settings.pop("et_rollback", None)
     unknown = set(settings) - set(DEFAULTS)
     if unknown:
         raise ValueError("Unknown detail_fusion settings: " + ", ".join(sorted(unknown)))
     resolved = {**DEFAULTS, **settings}
     if resolved["mode"] not in MODES:
         raise ValueError("detail_fusion.mode must be off, concat or gated")
+    if rollback is not None:
+        if rollback not in ("constant", "local") or resolved["mode"] != "gated":
+            raise ValueError("detail_fusion.et_rollback requires gated mode and constant or local")
+        resolved["et_rollback"] = rollback
     for name in ("full_channels", "half_channels"):
         # The semantic gate compresses to channels // 2, so at least two are needed.
         if type(resolved[name]) is not int or resolved[name] < 2:

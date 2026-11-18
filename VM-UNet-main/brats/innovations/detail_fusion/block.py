@@ -84,12 +84,49 @@ class SemanticGate(nn.Module):
         return detail * weight
 
 
+class ETRollback(nn.Module):
+    """Undo part of the ET suppression where the trained detail branch changed the class."""
+
+    def __init__(self, channels, mode):
+        super().__init__()
+        if mode == "constant":
+            self.strength = nn.Parameter(torch.zeros(()))
+        else:
+            self.strength = nn.Sequential(
+                nn.Conv2d(channels + 2, 8, 3, padding=1),
+                nn.GELU(),
+                nn.Conv2d(8, 1, 1),
+            )
+            nn.init.zeros_(self.strength[-1].weight)
+            nn.init.zeros_(self.strength[-1].bias)
+
+    def forward(self, trunk, final, features):
+        # ET is the last exclusive class, so it must strictly beat non-ET to win argmax.
+        trunk_margin = trunk[:, 3:4].float() - trunk[:, :3].amax(dim=1, keepdim=True).float()
+        final_margin = final[:, 3:4].float() - final[:, :3].amax(dim=1, keepdim=True).float()
+        if isinstance(self.strength, nn.Parameter):
+            raw = self.strength
+        else:
+            margins = torch.cat((trunk_margin, final_margin), dim=1).to(features.dtype)
+            raw = self.strength(torch.cat((features, margins), dim=1))
+        # A straight-through clamp guarantees bounded inference and lets both
+        # controls learn from an exact zero rollback even when a score falls below zero.
+        raw = raw.float()
+        alpha = raw.detach().clamp(0, 1) + (raw - raw.detach())
+        eligible = (trunk_margin > 0) & (final_margin <= 0)
+        correction = torch.where(eligible, alpha * (trunk_margin - final_margin), 0.0)
+        et = (final[:, 3:4].float() + correction).to(final.dtype)
+        return torch.cat((final[:, :3], et), dim=1)
+
+
 class DetailFusion(nn.Module):
     def __init__(self, in_channels, decoder_channels, num_classes, mode="gated",
-                 full_channels=16, half_channels=32):
+                 full_channels=16, half_channels=32, et_rollback=None):
         super().__init__()
         if mode not in ("concat", "gated"):
             raise ValueError("DetailFusion requires concat or gated mode")
+        if et_rollback is not None and (mode != "gated" or num_classes != 4):
+            raise ValueError("ET rollback requires gated detail fusion with four classes")
         self.mode = mode
         self.stem_full = ConvBlock(in_channels, full_channels)
         self.stem_half = ConvBlock(full_channels, half_channels, stride=2)
@@ -106,8 +143,9 @@ class DetailFusion(nn.Module):
         # Parameters always stay in the graph, keeping DDP's parameter set fixed.
         nn.init.zeros_(self.head.weight)
         nn.init.zeros_(self.head.bias)
+        self.et_rollback = ETRollback(full_channels, et_rollback) if et_rollback else None
 
-    def forward(self, image, decoder):
+    def forward(self, image, decoder, trunk_logits=None):
         if image.ndim != 4 or decoder.ndim != 4:
             raise ValueError("Expected BCHW image and BHWC decoder features")
         batch, _, height, width = image.shape
@@ -124,4 +162,8 @@ class DetailFusion(nn.Module):
         if self.mode == "gated":
             full = self.gate_full(semantic, full)
         semantic = self.fuse_full(torch.cat((semantic, full), dim=1))
-        return self.head(semantic)
+        residual = self.head(semantic)
+        if self.et_rollback is None:
+            return residual
+        final = trunk_logits + residual.to(trunk_logits.dtype)
+        return self.et_rollback(trunk_logits, final, semantic)

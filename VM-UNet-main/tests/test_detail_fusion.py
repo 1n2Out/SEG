@@ -9,7 +9,8 @@ from train_brats import (SOURCE, extension_prefixes, innovation_settings, load_t
 
 
 @pytest.mark.parametrize("settings", [None, [], {"mode": "full"}, {"mode": "gated", "gate": True},
-    {"full_channels": 1}, {"half_channels": 0}, {"full_channels": True}, {"half_channels": 8.0}])
+    {"full_channels": 1}, {"half_channels": 0}, {"full_channels": True}, {"half_channels": 8.0},
+    {"mode": "concat", "et_rollback": "local"}, {"mode": "gated", "et_rollback": "unknown"}])
 def test_invalid_settings_rejected(settings):
     with pytest.raises(ValueError, match="detail_fusion"):
         resolve_settings(settings)
@@ -220,3 +221,69 @@ def test_forward_adds_branch_logits_to_unchanged_backbone_logits(vmunet_classes,
     assert decoded.grad.abs().sum() > 0  # the branch reads the final decoder features
     with pytest.raises(ValueError, match="Expected 4 input"):
         model(torch.zeros(1, 1, 32, 32))
+
+
+@pytest.mark.parametrize("mode", ["constant", "local"])
+def test_et_rollback_identity_gradients_and_eligible_pixels(mode):
+    from brats.innovations.detail_fusion.block import ETRollback
+
+    head = ETRollback(4, mode)
+    trunk = torch.zeros(1, 4, 1, 4)
+    trunk[:, 3] = torch.tensor([2.0, -1.0, 0.0, 2.0])
+    final = torch.zeros_like(trunk)
+    final[:, 3] = torch.tensor([-1.0, -1.0, -1.0, 1.0])
+    features = torch.zeros_like(trunk)
+    initial = head(trunk, final, features)
+    torch.testing.assert_close(initial, final, atol=0, rtol=0)
+    (-initial[:, 3].sum()).backward()
+    with torch.no_grad():
+        parameter = head.strength if mode == "constant" else head.strength[-1].bias
+        assert parameter.grad.item() < 0
+        parameter.fill_(2.0)
+    corrected = head(trunk, final, features)
+    torch.testing.assert_close(corrected[:, :3], final[:, :3], atol=0, rtol=0)
+    assert corrected[:, 3].flatten().tolist() == [2.0, -1.0, -1.0, 1.0]
+
+
+@pytest.mark.parametrize("mode", ["constant", "local"])
+def test_et_rollback_screening_freezes_base_and_reuses_source_weights(mode, vmunet_classes, tmp_path, monkeypatch):
+    from train_brats import apply_warm_start, new_parameter_prefixes, optimizer_parameter_groups
+
+    _, DetailFusionVMUNet = vmunet_classes
+    config = load_training_config(SOURCE / f"configs/screening/et-rollback-{mode}.json")
+    validate_config(config)
+    settings = config["detail_fusion"]
+    source = DetailFusionVMUNet(detail_fusion={"mode": "gated"}, **KWARGS)
+    with torch.no_grad():
+        source.detail_fusion.head.bias[3] = -1
+    path = tmp_path / "best.pth"
+    torch.save({"model_state_dict": source.state_dict(), "manifest_sha256": "split", "epoch": 95}, path)
+    config["warm_start"]["checkpoint"] = str(path)
+    model = DetailFusionVMUNet(detail_fusion=settings, freeze_base=True, **KWARGS)
+    prefixes = new_parameter_prefixes(config)
+    report = apply_warm_start(model, config["warm_start"], "split", prefixes)
+    assert report["source_epoch"] == 95 and report["new_tensors"]
+    groups = optimizer_parameter_groups(model, config)
+    expected = list(model.detail_fusion.et_rollback.parameters())
+    assert len(groups) == 1 and groups[0]["lr"] == 1e-4
+    assert [id(p) for p in groups[0]["params"]] == [id(p) for p in expected]
+    model.train()
+    assert not model.vmunet.training and not model.detail_fusion.training
+    assert model.detail_fusion.et_rollback.training
+    assert all(p.requires_grad == name.startswith(prefixes) for name, p in model.named_parameters())
+
+    image = torch.randn(1, 4, 32, 32)
+    decoder = torch.randn(1, 8, 8, 96)
+    trunk = torch.zeros_like(image)
+    trunk[:, 3] = 0.25
+    for instance in (source, model):
+        monkeypatch.setattr(instance.vmunet, "forward_features", lambda image: (None, None))
+        monkeypatch.setattr(instance.vmunet, "forward_features_up", lambda encoded, skips: decoder)
+        monkeypatch.setattr(instance.vmunet, "forward_final", lambda features: trunk)
+    initial = model(image)
+    torch.testing.assert_close(initial, source.eval()(image), atol=0, rtol=0)
+    optimizer = torch.optim.SGD(groups)
+    (-initial[:, 3].mean()).backward()
+    assert all(p.grad is None for p in model.parameters() if not p.requires_grad)
+    optimizer.step()
+    assert (model(image)[:, 3] > initial[:, 3]).all()

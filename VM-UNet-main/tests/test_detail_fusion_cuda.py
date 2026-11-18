@@ -128,3 +128,19 @@ def test_warm_start_reproduces_source_model_and_groups_learning_rates(tmp_path):
     image = torch.randn(2, 4, 64, 64, device="cuda")
     with torch.no_grad(), torch.cuda.amp.autocast():
         torch.testing.assert_close(model(image), source(image), atol=0, rtol=0)
+
+
+@pytest.mark.parametrize("mode", ["constant", "local"])
+def test_et_rollback_starts_at_source_under_amp(mode):
+    from train_brats import SOURCE, build_model, load_training_config
+
+    config = load_training_config(SOURCE / f"configs/screening/et-rollback-{mode}.json")
+    original = {**config, "detail_fusion": {"mode": "gated"}}
+    source = build_model(original).cuda().eval()
+    model = build_model(config).cuda().train()
+    state = model.load_state_dict(source.state_dict(), strict=False)
+    assert not state.unexpected_keys and state.missing_keys
+    assert all(name.startswith("detail_fusion.et_rollback.") for name in state.missing_keys)
+    image = torch.randn(2, 4, 64, 64, device="cuda")
+    with torch.no_grad(), torch.cuda.amp.autocast():
+        torch.testing.assert_close(model(image), source(image), atol=0, rtol=0)

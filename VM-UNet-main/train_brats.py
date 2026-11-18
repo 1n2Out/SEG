@@ -146,7 +146,8 @@ def build_model(config):
                   load_ckpt_path=config["pretrained"])
     if extension is not None and extension[1]["mode"] != "off":
         from brats.innovations.detail_fusion.model import DetailFusionVMUNet
-        return DetailFusionVMUNet(detail_fusion=extension[1], **kwargs)
+        freeze_base = bool(extension[1].get("et_rollback") and config.get("warm_start"))
+        return DetailFusionVMUNet(detail_fusion=extension[1], freeze_base=freeze_base, **kwargs)
     return VMUNet(**kwargs)
 
 
@@ -158,8 +159,12 @@ def build_criterion(config):
 
 
 def validate_config(config):
-    innovation_settings(config)
-    warm_start_settings(config)
+    extension = innovation_settings(config)
+    warm_start = warm_start_settings(config)
+    if extension and extension[1].get("et_rollback") and warm_start:
+        if warm_start["new_parameters"] != ["detail_fusion.et_rollback."] or warm_start["new_parameter_lr"] is None:
+            raise ValueError("ET rollback screening requires warm_start.new_parameters=['detail_fusion.et_rollback.'] "
+                             "and warm_start.new_parameter_lr")
     EarlyStopping(**config.get("early_stopping", {}))
     if config["input_channels"] != 4 or config["num_classes"] != 4:
         raise ValueError("This protocol requires four MRI inputs and four exclusive output classes")
@@ -248,12 +253,13 @@ def optimizer_parameter_groups(model, config):
     prefixes = new_parameter_prefixes(config)
     if settings is None or settings["new_parameter_lr"] is None or not prefixes:
         return None
-    named = list(model.named_parameters())
+    named = [(name, parameter) for name, parameter in model.named_parameters() if parameter.requires_grad]
     new = [parameter for name, parameter in named if name.startswith(prefixes)]
     if not new:
         raise ValueError("The configured extension added no parameters")
     original = [parameter for name, parameter in named if not name.startswith(prefixes)]
-    return [{"params": original}, {"params": new, "lr": settings["new_parameter_lr"]}]
+    groups = [{"params": new, "lr": settings["new_parameter_lr"]}]
+    return [{"params": original}, *groups] if original else groups
 
 
 def capture_rng(generator):
