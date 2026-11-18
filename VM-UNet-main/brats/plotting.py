@@ -64,6 +64,91 @@ def write_table(path, rows, fields=None):
         writer.writerows(rows)
 
 
+def plot_detail_motivation(args, style):
+    import matplotlib.pyplot as plt
+
+    summary = json.loads((args.analysis_dir / "summary.json").read_text(encoding="utf-8"))
+    with (args.analysis_dir / "val-paired.csv").open(encoding="utf-8-sig", newline="") as stream:
+        pairs = list(csv.DictReader(stream))
+
+    colors = ("#4477aa", "#cc6677")
+    positions = np.arange(len(REGIONS))
+    fig, axes = plt.subplots(1, 2, figsize=(9, 3.6), layout="constrained")
+    for index, split in enumerate(("train", "val")):
+        regions = summary["labels"][split]["regions"]
+        axes[0].bar(positions + (index - 0.5) * 0.31,
+                    [regions[region]["pooled_boundary_percent"] for region in REGIONS],
+                    width=0.31, color=colors[index], label=split.title())
+        for size_index, size in enumerate(("2", "4")):
+            loss = [100 - regions[region]["mean_patient_block_dice_percent"][size] for region in REGIONS]
+            axes[1].bar(positions + (2 * index + size_index - 1.5) * 0.19, loss, width=0.18,
+                        color=colors[index], hatch="//" if size == "4" else None,
+                        edgecolor=colors[index] if size == "2" else "white",
+                        label=f"{split.title()} {size}×{size}")
+    axes[0].set(ylabel="Boundary voxels (%)", title="In-plane label boundary")
+    axes[1].set(ylabel="Dice loss (percentage points)", title="Block-majority label approximation")
+    for ax in axes:
+        ax.set_xticks(positions, labels=list(REGIONS))
+        ax.set_axisbelow(True)
+        ax.grid(axis="y", alpha=0.2)
+    axes[0].legend(frameon=False)
+    axes[1].legend(frameon=False, fontsize=9)
+    save_figure(fig, args.output_dir, "label-motivation", style)
+
+    associations = summary["val_adjusted_associations"]
+    boundary = np.array([float(row["et_boundary_percent"]) for row in pairs])
+    extent = np.array([boundary.min(), boundary.max()])
+    fig, axes = plt.subplots(1, 2, sharex=True, sharey=True, figsize=(9, 3.8), layout="constrained")
+    for ax, mode, color in zip(axes, ("concat", "gated"), colors):
+        result = associations[mode]
+        fitted = result["intercept_at_centered_volume_pp"] + result["slope_pp_per_10pp_boundary"] * extent / 10
+        ax.axhline(0, color="#999999", linewidth=1, zorder=0)
+        ax.scatter(boundary, [float(row[f"{mode}_delta_pp"]) for row in pairs],
+                   s=23, alpha=0.65, color=color, edgecolors="none", label="Patient")
+        ax.plot(extent, fitted, color=color, linewidth=1.8, label="Fit at median ET size")
+        ax.set(xlabel="ET boundary voxels (%)", title=f"{mode.title()} vs. baseline")
+        ax.grid(axis="y", alpha=0.2)
+    axes[0].set_ylabel("ET Dice change (percentage points)")
+    axes[1].legend(loc="best", frameon=False)
+    save_figure(fig, args.output_dir, "val-et-boundary-association", style)
+
+
+def plot_et_audit(args, style):
+    import matplotlib.pyplot as plt
+
+    summary = json.loads((args.analysis_dir / "summary.json").read_text(encoding="utf-8"))
+    fig, axes = plt.subplots(2, 2, figsize=(9, 6), constrained_layout=True)
+    for ax, (action, title, zones) in zip(axes.flat, (
+            ("recover", "Missed ET recovered", ("interior", "inner-boundary")),
+            ("lose", "Correct ET lost", ("interior", "inner-boundary")),
+            ("remove-fp", "False positives removed", ("outer-boundary", "outside", "empty-et")),
+            ("add-fp", "New false positives", ("outer-boundary", "outside", "empty-et")))):
+        rows = [r for r in summary["regional_rates"] if r["action"] == action and r["zone"] in zones]
+        values = [100 * r["mean_rate"] if r["mean_rate"] is not None else np.nan for r in rows]
+        ax.bar(range(len(rows)), values, color="#4477aa")
+        ax.set_xticks(range(len(rows)))
+        ax.set_xticklabels([f"{r['zone']}\n(n={r['valid_patients']})" for r in rows])
+        ax.set(title=title, ylabel="Mean patient rate (%)", ylim=(0, None))
+    save_figure(fig, args.output_dir, "regional-rates", style)
+
+    for role, case_id in summary["selected"].items():
+        if case_id is None:
+            continue
+        path = args.analysis_dir / (case_id.lower().replace("_", "-") + ".npz")
+        with np.load(path, allow_pickle=False) as planes:
+            fig, axes = plt.subplots(1, 3, figsize=(9, 3.4), constrained_layout=True)
+            for ax, key, title in zip(axes, ("truth", "trunk", "final"), ("Reference ET", "Trunk ET", "Final ET")):
+                ax.imshow(planes["image"].T, origin="lower", cmap="gray")
+                mask = planes[key].T == 4
+                overlay = np.zeros((*mask.shape, 4))
+                overlay[mask] = (0.95, 0.25, 0.12, 0.55)
+                ax.imshow(overlay, origin="lower")
+                ax.set_title(title)
+                ax.axis("off")
+            fig.suptitle(f"{role.title()} | {case_id} | axial {int(planes['z'])} | T1ce")
+            save_figure(fig, args.output_dir, "case-" + role, style)
+
+
 def data_context(args):
     manifest = load_manifest(args.manifest)
     if manifest["purpose"] != "training":

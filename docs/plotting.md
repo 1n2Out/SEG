@@ -40,3 +40,18 @@ python plot_brats.py curves --work-dirs results/<运行A> results/<运行B> --na
 - **数据来源。** 只读取 `history.jsonl`，旧日志还会读 `validation/epoch_*/summary.json`。也可以直接读 `research/experiments/EXP-xxx/history.jsonl`（要把该目录作为 `--work-dirs` 传入）。
 - **输出。** 训练 loss 与验证 Mean Dice、各区域验证 Dice、loss 分量、学习率与累计训练时间，另有 `curve_data.csv`。
 - **作图原则。** 只在真实做过验证的轮次画点，不平滑，也不补造缺失的轮次。累计训练时间不含验证时间。
+
+## 细节回注动机 `detail-motivation`
+
+```bash
+python analysis/detail-motivation.py
+python plot_brats.py detail-motivation
+```
+
+- **输入。** 固定划分的 train/val 标签，以及 EXP-001、EXP-014、EXP-006 的 val best 逐患者结果。
+- **输出。** 标签动机图和非空 ET 逐患者配对图。源表及统计汇总位于 `results/analysis/detail-motivation/`。
+- **读图。** 标签图的 Dice 损失为 100% 减去块多数投票的患者平均 Dice。配对图的点为原始配对差，拟合线为将 ET 大小固定在中位数时的估计值。
+
+## ET 残差修正 `et-residual-audit`
+
+`python plot_brats.py et-residual-audit` 从 [TASK-006](../handoff/task-006-et-residual-audit.md) 的核验产物绘图。分区柱高为机会数大于零的患者的平均翻转率，标签 n 是参与该柱统计的患者数。病例图在同一张 T1ce 切片叠加真值 ET、主干 ET 和最终 ET，输出位于分析目录的 `figures/`。
