@@ -43,19 +43,6 @@ def test_declared_new_parameters_must_be_extension_prefixes(declared):
         warm_start_settings({"pretrained": None, "warm_start": {"checkpoint": "b", "new_parameters": ["x."]}})
 
 
-def test_stacking_control_starts_from_exp006_and_follows_the_screening_protocol():
-    path = SOURCE / "configs/screening/stack-control.json"
-    validate_config(load_training_config(path))
-    config = json.loads(path.read_text(encoding="utf-8"))
-    assert config["launch"].pop("work_dir") == "results/screening-stack-control"
-    assert config.pop("warm_start") == {"checkpoint": "results/brats2020_detail_gated_1113_1530/best.pth",
-                                        "new_parameter_lr": 0.0001, "new_parameters": []}
-    expected = screening_config("detail_gated")
-    expected.pop("warm_start")
-    expected["launch"].pop("work_dir")
-    assert config == expected  # same 10-epoch protocol and gated branch as the IDEA-001 screening
-
-
 def test_screening_configs_share_one_protocol_and_differ_only_by_extension():
     formal = json.loads((SOURCE / "configs/brats2020.json").read_text(encoding="utf-8"))
     gpu_count = len(formal["launch"].pop("gpus"))

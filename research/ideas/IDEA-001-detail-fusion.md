@@ -1,6 +1,6 @@
 # IDEA-001：多分辨率细节回注与语义门控
 
-状态：**采纳** · 角色：论文主线创新点，后续优化的基座 · 方法文档：[detail_fusion](../../docs/methods/detail_fusion.md) · 实验：[EXP-006](../experiments/EXP-006/report.md) · 决定：[decisions](../decisions.md) 2026-11-15
+状态：**采纳** · 定位：第二项工作的正式创新点一 · 方法文档：[detail_fusion](../../docs/methods/detail_fusion.md) · 实验：[EXP-006](../experiments/EXP-006/report.md) · 决定：[decisions](../decisions.md) 2026-11-19
 
 ## 动机
 
@@ -28,7 +28,7 @@
 ## 依据
 
 - **Swin-UMamba（MICCAI 2024）** 在 Mamba 编码器前加了步长 2 的卷积 stem，并从输入直接接一条全分辨率跳跃连接；**U-Net v2 / VM-UNetV2** 研究语义与细节特征的融合。
-- **门控：** 沿用 EMCAD（CVPR 2024）的 LGAG。
+- 空间门控借鉴 EMCAD（CVPR 2024）的 LGAG，归一化和权重生成方式见[方法文档](../../docs/methods/detail_fusion.md)。
 - **贡献定位。** 粗网格下 ET 标签的近似损失为结构设计提供动机。在 VM-UNet 解码端逐级融合原图细节，并以残差修正分割输出；卷积支路和 LGAG 门控均有既有工作基础。
 
 ## 验证记录
@@ -37,13 +37,9 @@
 - 完整训练（[TASK-002](../../handoff/archive/task-002-detail-gated-full-training.md)）的验证集结果见 EXP-006。
 - 同一 EXP-006 权重下，残差修正前后的逐患者与分区统计已通过 [TASK-006](../../handoff/archive/task-006-et-residual-audit.md) 核验。
 
-## 结论
-
-2026-11-15 采纳为第二项工作的正式创新点，后续优化以 EXP-006 为基座和对照。
+## 论文表述
 
 - **完整模型效果。** 同一训练协议下，EXP-006 相对独立训练的 EXP-001 提升了验证集 Mean Dice 和 ET Dice。[完整训练对照](../experiments/EXP-006/report.md)
 - **残差的直接作用。** 在固定 EXP-006 权重的验证集诊断中，残差主要削减共同训练主干的 ET 误检，多数非空 ET 患者受益。修正也删去部分真实 ET，包含小病灶最终预测为空的反例。该比较只衡量同一模型内部的输出变化。[逐患者核验报告](../experiments/EXP-006/et-residual-audit/report.md)
 - **测试集：** 只评价过一次，见 [FINAL 报告](../experiments/EXP-006/final/report.md)。Dice 提升且 ET 最明显；Mean HD95 未同步改善，患者重采样区间跨 0，论文须如实呈现。
-- **门控：** concat 完整训练见 [EXP-014](../experiments/EXP-014/report.md)，Mean Dice 比 gated 低 0.83 个百分点；其中约 0.61 来自一例空 ET 假阳性，非空 ET 平均 Dice 是 concat 略高。
-- **叠加件：** [IDEA-005](IDEA-005-boundary-supervision.md)、[IDEA-006](IDEA-006-slice-context.md) 筛选未通过，已放弃；[IDEA-007](IDEA-007-deep-supervision.md)（深监督）和 [IDEA-008](IDEA-008-input-stem.md)（输入端补强）完整训练未通过，已放弃。
-- **后续优化的约束：** A 已于 2026-11-15 接触测试集，此后在 BraTS 上提出的优化 IDEA 须注明这一点，且不得以测试集现象为动机；优化后的最终模型只测一次 test。
+- **门控消融。** 单种子验证中，gated 的整体 Mean Dice 高于 concat。差距主要来自一例空 ET 误检，非空 ET 平均 Dice 则以 concat 略高。[EXP-014 配对分析](../experiments/EXP-014/report.md)

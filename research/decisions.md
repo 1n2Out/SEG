@@ -27,4 +27,5 @@
 - **2026-11-18** 放弃 IDEA-007（深监督）和 IDEA-008（输入端补强）：TASK-005 中 EXP-011～013 均未通过门槛，不调参重跑。删除两者代码、配置与测试；协议恢复为不附加辅助损失。
 - **2026-11-18** 同意按 [TASK-006](../handoff/archive/task-006-et-residual-audit.md) 在 B 端用 EXP-006 的 val best 权重分析细节支路对 ET 的修正，仅使用验证集。
 - **2026-11-18** 暂缓进一步涨点探索，包括误删辨别、残差强度和模态判别的后续尝试。
-- **2026-11-18** 恢复 ET 残差强度筛选，冻结 EXP-006，对比常数和局部门控。按 [TASK-007](../handoff/archive/task-007-et-rollback-screening.md) 先筛选，完整训练待裁决。
+- **2026-11-18** 恢复 ET 残差强度筛选，冻结 EXP-006，对比常数和局部门控。按 [TASK-007](../handoff/archive/task-007-et-rollback-screening.md) 先筛选，完整训练待裁决。 → 被 2026-11-19 取代（创新点一定稿）
+- **2026-11-19** 确定 [EXP-006](experiments/EXP-006/report.md) 为第二项工作的正式创新点一，即 [IDEA-001 语义引导的多分辨率细节回注](ideas/IDEA-001-detail-fusion.md)。
