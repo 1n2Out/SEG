@@ -1,0 +1,50 @@
+{
+  "exp": "EXP-015",
+  "title": "筛选：ET 常数回调",
+  "run_dir": "brats2020_et_rollback_constant_screen_1118_1559",
+  "collected_at": "2026-11-19T10:17:44+08:00",
+  "git": {
+    "commit": "8d94b9d249428c756d80d22c0af19bc4c150a82f",
+    "branch": "stage003-detail-stacking",
+    "dirty": false,
+    "changes": []
+  },
+  "config": {
+    "epochs": 10,
+    "batch_size": 16,
+    "learning_rate": 1e-05,
+    "pretrained": null,
+    "warm_start": "/home/hzh/hwh/Seg/VM-UNet-main/results/brats2020_detail_gated_1113_1530/best.pth",
+    "extension": {
+      "detail_fusion": {
+        "mode": "gated",
+        "full_channels": 16,
+        "half_channels": 32,
+        "et_rollback": "constant"
+      }
+    }
+  },
+  "epochs_completed": 10,
+  "train_hours": 0.39,
+  "parameters": 27499635,
+  "selected_epoch": 10,
+  "selection": "fixed",
+  "val": {
+    "mean_dice": 0.8305037260637013,
+    "mean_hd95_mm": 16.962873760522545,
+    "WT": {
+      "dice": 0.9088764328702965,
+      "hd95_mm": 9.79380277161099
+    },
+    "TC": {
+      "dice": 0.8210476944922354,
+      "hd95_mm": 9.105535604363046
+    },
+    "ET": {
+      "dice": 0.7615870508285717,
+      "hd95_mm": 31.989282905593605
+    },
+    "et_empty_false_positive": "2/5",
+    "et_nonempty_dice": 0.777745755911429
+  }
+}

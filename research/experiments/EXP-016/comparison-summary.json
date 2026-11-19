@@ -1,0 +1,64 @@
+{
+  "split": "val",
+  "reference": "EXP-006",
+  "constant": "EXP-015",
+  "local": "EXP-016",
+  "comparisons": {
+    "constant": {
+      "mean_dice_delta_pp": 0.0,
+      "et_dice_delta_pp": 0.0,
+      "mean_hd95_delta_mm": 0.0,
+      "nonempty_et": {
+        "n": 50,
+        "mean_delta_pp": 0.0,
+        "median_delta_pp": 0.0,
+        "up": 0,
+        "down": 0,
+        "tie": 50
+      },
+      "recovered_true_et_voxels": 0,
+      "added_false_et_voxels": 0,
+      "new_empty_et_false_positive_cases": [],
+      "checks": {
+        "mean_dice_at_least_0_3pp": false,
+        "et_dice_not_lower": true,
+        "nonempty_more_gains_than_losses": false,
+        "no_new_empty_et_false_positive_patient": true
+      },
+      "passes_vs_exp006": false
+    },
+    "local": {
+      "mean_dice_delta_pp": -0.00015736832872370599,
+      "et_dice_delta_pp": -0.00024665778446397724,
+      "mean_hd95_delta_mm": -0.00010752683282788666,
+      "nonempty_et": {
+        "n": 50,
+        "mean_delta_pp": -0.00027132356291525994,
+        "median_delta_pp": 0.0,
+        "up": 0,
+        "down": 1,
+        "tie": 49
+      },
+      "recovered_true_et_voxels": 0,
+      "added_false_et_voxels": 6,
+      "new_empty_et_false_positive_cases": [],
+      "checks": {
+        "mean_dice_at_least_0_3pp": false,
+        "et_dice_not_lower": false,
+        "nonempty_more_gains_than_losses": false,
+        "no_new_empty_et_false_positive_patient": true
+      },
+      "passes_vs_exp006": false
+    }
+  },
+  "local_vs_constant_mean_dice_pp": -0.00015736832872370599,
+  "local_candidate_for_full_training": false,
+  "input_sha256": {
+    "EXP-006/summary.json": "a7f4d06dfee9b676afc906b37043559511b24b3bfa12d7974bb3859b747d71cf",
+    "EXP-006/val_per_patient.csv": "ce182c40efd1c6d354352901a5d31fa6a5cdfb219eb69acd1af4129d3c268835",
+    "EXP-015/summary.json": "ed4d6799289d2f993a406678145c9c9a3a5cdcdd64981438a184930b5f1fc61f",
+    "EXP-015/val_per_patient.csv": "ce182c40efd1c6d354352901a5d31fa6a5cdfb219eb69acd1af4129d3c268835",
+    "EXP-016/summary.json": "f27d747f038e26f91fe0646b3e1102cafc5e2b6b702cc2231e9e0057b9a5f46f",
+    "EXP-016/val_per_patient.csv": "49ff1927d8944346437a54444344ea66b4b47b4de6d662d5460b73b87fd8962c"
+  }
+}

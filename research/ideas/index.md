@@ -12,7 +12,7 @@
 | [IDEA-006](IDEA-006-slice-context.md) | 细节支路读取相邻切片 | 放弃 | 只给细节支路补层间信息；筛选中无方向性信号，与边界监督叠加也不互补 |
 | [IDEA-007](IDEA-007-deep-supervision.md) | 多尺度深监督（粗—细两级） | 放弃 | 五处同损失监督；完整训练 ET 升、TC 降，Mean Dice 无增益（EXP-011） |
 | [IDEA-008](IDEA-008-input-stem.md) | 输入端卷积补强 | 放弃 | 1/2 细节零初始化加到 patch embedding；完整训练 Mean Dice 与 ET 均下降（EXP-012） |
-| [IDEA-009](idea-009-et-rollback.md) | ET 残差强度门控 | 已实现 | 按局部特征回调 ET 抑制，与可学习的常数回调配对筛选 |
+| [IDEA-009](idea-009-et-rollback.md) | ET 残差强度门控 | 已实现 | 常数与局部回调均未达到 [TASK-007](../../handoff/archive/task-007-et-rollback-screening.md) 的筛选门槛 |
 | — | 区域存在性感知监督 | 放弃 | 非空 ET 有改善，但空 ET 假阳性增多，总体退步；源码在 `VM-UNet-main/archives/` |
 
 ## 候选池（未立项，只保留取舍结论）

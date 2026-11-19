@@ -12,7 +12,7 @@
 |---|---|---|
 | `mode` | `off`（或不写该字段）/ `concat` / `gated` | `off` 为原 VMUNet；`concat` 补出 1/2、1/1 细节支路并与解码语义拼接；`gated` 在拼接前先用语义门控筛选细节 |
 | `full_channels`、`half_channels` | 整数，至少为 2 | 1/1、1/2 尺度的通道数 |
-| `et_rollback` | 省略、`constant`、`local` | gated 模式的 ET 输出回调；两种筛选配置见 [TASK-007](../../handoff/task-007-et-rollback-screening.md) |
+| `et_rollback` | 省略、`constant`、`local` | gated 模式的 ET 输出回调，两种筛选配置见 [TASK-007](../../handoff/archive/task-007-et-rollback-screening.md) |
 
 省略的字段会补上默认值，并写入 checkpoint。已退役的 `deep_supervision`、`input_stem`（IDEA-007/008）只接受 `false` 并被忽略，以便加载 EXP-014 等由当时代码训练的 checkpoint。
 
@@ -53,7 +53,7 @@
 
 `constant` 使用共享标量。`local` 使用全分辨率融合特征和两张相对分数图，经过 3×3 卷积、GELU 和 1×1 卷积输出逐像素系数。两组系数均从零起步，前向裁剪到 [0, 1]，反向梯度直通，避免从零启动时因裁剪而截断学习。AMP 下用 FP32 计算分数差和插值，再转换为最终 logits 的 dtype。
 
-筛选配置通过 `warm_start.new_parameters` 指定新模块前缀。构建时冻结已载入的主干与细节模块并使其处于 eval，仅让回调参数进入优化器。来源及固定轮次比较见 [TASK-007](../../handoff/task-007-et-rollback-screening.md)。
+筛选配置通过 `warm_start.new_parameters` 指定新模块前缀。构建时冻结已载入的主干与细节模块并使其处于 eval，仅让回调参数进入优化器。来源及固定轮次比较见 [TASK-007](../../handoff/archive/task-007-et-rollback-screening.md)。
 
 ## 工程检查
 
