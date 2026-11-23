@@ -39,6 +39,7 @@ SEG/                          # git 仓库根目录
 | 结果收集与总表 | `collect_brats.py` |
 | 输入输出封装、预训练加载 | `models/vmunet/vmunet.py::VMUNet` |
 | 编解码、跳跃连接、selective scan | `models/vmunet/vmamba.py::VSSM / VSSBlock / SS2D` |
+| SS2D 四方向分组融合 | `brats/innovations/detail_fusion/direction.py::DirectionFusion`，由 gated 选项在 SS2D 四路对齐后接入，见[方法](methods/direction-fusion.md) |
 | 模型扩展的注册与分派 | `train_brats.py::innovation_settings / build_model`，以及 `EXTENSIONS` |
 
 ## 新增模型扩展的约定

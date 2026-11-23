@@ -40,6 +40,38 @@ def labels(device="cuda"):
     return target
 
 
+def test_all_direction_amp_against_gated_and_gradients():
+    from train_brats import SOURCE, build_criterion, build_model, load_training_config
+    base = load_training_config(SOURCE / "configs/detail_fusion/gated.json")
+    full = load_training_config(SOURCE / "configs/detail_fusion/direction-all.json")
+    image = torch.randn(2, 4, 64, 64, device="cuda")
+    torch.manual_seed(42)
+    original = build_model(base).cuda().eval()
+    with torch.no_grad(), torch.cuda.amp.autocast():
+        reference = original(image)
+    del original
+    torch.manual_seed(42)
+    model = build_model(full).cuda().eval()
+    with torch.no_grad(), torch.cuda.amp.autocast():
+        torch.testing.assert_close(model(image), reference, atol=0, rtol=0)
+    model.train()
+    optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4)
+    scaler = torch.cuda.amp.GradScaler(init_scale=128.)
+    for step in range(2):
+        optimizer.zero_grad(set_to_none=True)
+        with torch.cuda.amp.autocast():
+            loss = build_criterion(full)(model(image), labels())
+        scaler.scale(loss).backward()
+        scaler.unscale_(optimizer)
+        assert all(p.grad is not None and torch.isfinite(p.grad).all() for p in model.parameters())
+        for name, p in model.named_parameters():
+            if name.endswith("direction_fusion.score.weight") or (
+                    step and name.endswith("direction_fusion.describe.weight")):
+                assert p.grad.abs().sum() > 0, name
+        scaler.step(optimizer)
+        scaler.update()
+
+
 @pytest.mark.parametrize("mode", ["concat", "gated"])
 def test_real_backbone_identity_amp_learning_and_resume(tmp_path, mode):
     from train_brats import SOURCE, build_criterion, build_model, load_checkpoint, save_checkpoint

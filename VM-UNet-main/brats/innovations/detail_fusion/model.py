@@ -18,6 +18,12 @@ class DetailFusionVMUNet(VMUNet):
             self.detail_fusion = DetailFusion(
                 self.input_channels, self.vmunet.dims[0], self.num_classes, settings["mode"],
                 settings["full_channels"], settings["half_channels"])
+            if settings.get("direction_fusion") == "all":
+                from .direction import DirectionFusion
+                for stage in [*self.vmunet.layers, *self.vmunet.layers_up]:
+                    for block in stage.blocks:
+                        scan = block.self_attention
+                        scan.direction_fusion = DirectionFusion(scan.d_inner)
 
     def forward(self, x):
         if x.size(1) != self.input_channels:

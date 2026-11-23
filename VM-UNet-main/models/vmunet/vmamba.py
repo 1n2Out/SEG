@@ -314,6 +314,7 @@ class SS2D(nn.Module):
 
         # self.selective_scan = selective_scan_fn
         self.forward_core = self.forward_corev0
+        self.direction_fusion = None
 
         self.out_norm = nn.LayerNorm(self.d_inner)
         self.out_proj = nn.Linear(self.d_inner, self.d_model, bias=bias, **factory_kwargs)
@@ -463,7 +464,10 @@ class SS2D(nn.Module):
         x = self.act(self.conv2d(x)) # (b, d, h, w)
         y1, y2, y3, y4 = self.forward_core(x)
         assert y1.dtype == torch.float32
-        y = y1 + y2 + y3 + y4
+        if self.direction_fusion is None:
+            y = y1 + y2 + y3 + y4
+        else:
+            y = self.direction_fusion((y1, y2, y3, y4), H, W)
         y = torch.transpose(y, dim0=1, dim1=2).contiguous().view(B, H, W, -1)
         y = self.out_norm(y)
         y = y * F.silu(z)

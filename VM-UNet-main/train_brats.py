@@ -84,7 +84,13 @@ def extension_prefixes(config):
     extension = innovation_settings(config)
     if extension is None or extension[1]["mode"] == "off":
         return ()
-    return (extension[0] + ".",)
+    prefixes = [extension[0] + "."]
+    if extension[1].get("direction_fusion") == "all":
+        for stack, depths in (("layers", config["depths"]), ("layers_up", config["depths_decoder"])):
+            for stage, depth in enumerate(depths):
+                prefixes.extend(f"vmunet.{stack}.{stage}.blocks.{block}.self_attention.direction_fusion."
+                                for block in range(depth))
+    return tuple(prefixes)
 
 
 def new_parameter_prefixes(config):

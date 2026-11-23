@@ -172,6 +172,59 @@ KWARGS = dict(input_channels=4, num_classes=4, depths=[2, 2, 2, 2], depths_decod
               drop_path_rate=0.2)
 
 
+def test_all_direction_blocks_preserve_shared_weights_and_protocol(vmunet_classes):
+    folder = SOURCE / "configs/detail_fusion"
+    base_config = json.loads((folder / "gated.json").read_text(encoding="utf-8"))
+    config = json.loads((folder / "direction-all.json").read_text(encoding="utf-8"))
+    validate_config(load_training_config(folder / "direction-all.json"))
+    from copy import deepcopy
+    comparison = deepcopy(config)
+    assert comparison["launch"]["work_dir"] != base_config["launch"]["work_dir"]
+    comparison["launch"]["work_dir"] = base_config["launch"]["work_dir"]
+    assert comparison["detail_fusion"].pop("direction_fusion") == "all"
+    assert comparison == base_config
+    _, model_class = vmunet_classes
+    torch.manual_seed(42)
+    source = model_class(base_config["detail_fusion"], **KWARGS)
+    rng = torch.get_rng_state()
+    torch.manual_seed(42)
+    model = model_class(config["detail_fusion"], **KWARGS)
+    assert torch.equal(rng, torch.get_rng_state())
+    state = model.state_dict()
+    assert all(torch.equal(value, state[key]) for key, value in source.state_dict().items())
+    prefixes = extension_prefixes(config)[1:]
+    assert len(prefixes) == 15
+    assert all(prefix + "score.weight" in state for prefix in prefixes)
+    assert all(key.startswith(prefixes) for key in set(state) - set(source.state_dict()))
+
+
+def test_direction_groups_choose_different_paths_and_learn():
+    from brats.innovations.detail_fusion.direction import DirectionFusion
+    torch.manual_seed(7)
+    fusion = DirectionFusion(24)
+    # Non-square geometry and real scan-like striding.
+    directions = torch.randn(2, 4, 24, 35).unbind(1)
+    original = directions[0] + directions[1] + directions[2] + directions[3]
+    assert torch.equal(fusion(directions, 5, 7), original)
+    target = torch.randn_like(original)
+    optimizer = torch.optim.SGD(fusion.parameters(), lr=0.01)
+    for step in range(2):
+        optimizer.zero_grad()
+        (fusion(directions, 5, 7) - target).square().mean().backward()
+        grads = [p.grad for p in fusion.parameters()]
+        assert all(g is not None and torch.isfinite(g).all() for g in grads)
+        if step == 1:
+            assert all(g.abs().sum() > 0 for g in grads)
+        optimizer.step()
+    with torch.no_grad():
+        fusion.score.weight.zero_()
+        logits = torch.randn(4, 8)
+        fusion.score.bias.copy_(logits.flatten())
+        weights = (4 * logits.softmax(0)).repeat_interleave(3, dim=1)
+        reference = sum(y * w[:, None] for y, w in zip(directions, weights))
+        torch.testing.assert_close(fusion(directions, 5, 7), reference)
+
+
 @pytest.fixture
 def vmunet_classes():
     # Constructing VSSM needs timm/einops but no selective scan; forward is never run here.
