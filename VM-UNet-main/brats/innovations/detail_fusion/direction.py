@@ -18,6 +18,9 @@ class DirectionFusion(nn.Module):
         nn.init.zeros_(self.score.weight)
         nn.init.zeros_(self.score.bias)
 
+    # FP16 can round away the descriptor gradients just after the zero-initialized
+    # score layer's first update. Keep this branch in the scan outputs' FP32 dtype.
+    @torch.cuda.amp.custom_fwd(cast_inputs=torch.float32)
     def forward(self, directions, height, width):
         batch, channels, length = directions[0].shape
         hf, hr, vf, vr = [self.describe(y) for y in directions]
