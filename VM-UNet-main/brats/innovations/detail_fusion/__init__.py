@@ -18,10 +18,15 @@ def resolve_settings(settings):
             if settings.pop(name) is not False:
                 raise ValueError("detail_fusion." + name + " has been retired (IDEA-007/008); restore "
                                  "its source from git commit 6785299 to evaluate or resume old runs")
+    contralateral = settings.pop("contralateral", False)
+    if type(contralateral) is not bool or (contralateral and settings.get("mode") != "gated"):
+        raise ValueError("detail_fusion.contralateral requires a boolean and gated mode when enabled")
     unknown = set(settings) - set(DEFAULTS)
     if unknown:
         raise ValueError("Unknown detail_fusion settings: " + ", ".join(sorted(unknown)))
     resolved = {**DEFAULTS, **settings}
+    if contralateral:
+        resolved["contralateral"] = True
     if resolved["mode"] not in MODES:
         raise ValueError("detail_fusion.mode must be off, concat or gated")
     for name in ("full_channels", "half_channels"):

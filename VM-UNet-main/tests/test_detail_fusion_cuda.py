@@ -128,3 +128,40 @@ def test_warm_start_reproduces_source_model_and_groups_learning_rates(tmp_path):
     image = torch.randn(2, 4, 64, 64, device="cuda")
     with torch.no_grad(), torch.cuda.amp.autocast():
         torch.testing.assert_close(model(image), source(image), atol=0, rtol=0)
+
+
+def test_contralateral_real_backbone_amp_and_checkpoint():
+    from train_brats import SOURCE, build_criterion, build_model, load_training_config
+    directory = SOURCE / "configs/detail_fusion"
+    config = load_training_config(directory / "contralateral.json")
+    torch.manual_seed(42)
+    reference = build_model(load_training_config(directory / "gated.json")).cuda().eval()
+    torch.manual_seed(42)
+    model = build_model(config).cuda().eval()
+    image = torch.randn(2, 4, 64, 64, device="cuda")
+    packed = torch.cat((image, image - image.flip((2,))), dim=1)
+    with torch.no_grad(), torch.cuda.amp.autocast():
+        torch.testing.assert_close(reference(image), model(packed), atol=0, rtol=0)
+    del reference
+    model.train()
+    optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4)
+    scaler = torch.cuda.amp.GradScaler(init_scale=128)
+    criterion = build_criterion(config)
+    branch = model.detail_fusion.contralateral
+    target = labels()
+    for step in range(3):
+        optimizer.zero_grad(set_to_none=True)
+        with torch.cuda.amp.autocast():
+            loss = criterion(model(packed), target)
+        scaler.scale(loss).backward()
+        scaler.unscale_(optimizer)
+        assert all(p.grad is not None and torch.isfinite(p.grad).all() for p in model.parameters())
+        if step == 2:
+            assert all(p.grad.abs().sum() > 0 for p in branch.parameters())
+        scaler.step(optimizer)
+        scaler.update()
+    model.eval()
+    resumed = build_model(config).cuda().eval()
+    resumed.load_state_dict(model.state_dict(), strict=True)
+    with torch.no_grad(), torch.cuda.amp.autocast():
+        torch.testing.assert_close(resumed(packed), model(packed), atol=0, rtol=0)

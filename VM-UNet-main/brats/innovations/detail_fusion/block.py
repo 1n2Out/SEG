@@ -84,9 +84,25 @@ class SemanticGate(nn.Module):
         return detail * weight
 
 
+class ContralateralFusion(nn.Module):
+    def __init__(self, modalities, channels):
+        super().__init__()
+        self.features = nn.Sequential(
+            nn.AvgPool2d(2), nn.Conv2d(modalities, channels, 3, padding=1, bias=False),
+            group_norm(channels), nn.GELU())
+        self.gate = nn.Conv2d(2 * channels, 1, 1)
+        self.project = nn.Conv2d(channels, channels, 1, bias=False)
+        nn.init.zeros_(self.project.weight)
+
+    def forward(self, difference, semantic):
+        features = self.features(difference)
+        weight = torch.sigmoid(self.gate(torch.cat((semantic, features), dim=1)))
+        return self.project(features * weight)
+
+
 class DetailFusion(nn.Module):
     def __init__(self, in_channels, decoder_channels, num_classes, mode="gated",
-                 full_channels=16, half_channels=32):
+                 full_channels=16, half_channels=32, contralateral=False):
         super().__init__()
         if mode not in ("concat", "gated"):
             raise ValueError("DetailFusion requires concat or gated mode")
@@ -106,8 +122,9 @@ class DetailFusion(nn.Module):
         # Parameters always stay in the graph, keeping DDP's parameter set fixed.
         nn.init.zeros_(self.head.weight)
         nn.init.zeros_(self.head.bias)
+        self.contralateral = ContralateralFusion(in_channels, half_channels) if contralateral else None
 
-    def forward(self, image, decoder):
+    def forward(self, image, decoder, difference=None):
         if image.ndim != 4 or decoder.ndim != 4:
             raise ValueError("Expected BCHW image and BHWC decoder features")
         batch, _, height, width = image.shape
@@ -120,6 +137,10 @@ class DetailFusion(nn.Module):
         if self.mode == "gated":
             half = self.gate_half(semantic, half)
         semantic = self.fuse_half(torch.cat((semantic, half), dim=1))
+        if self.contralateral is not None:
+            if difference is None or difference.shape != image.shape:
+                raise ValueError("Contralateral differences must match the original MRI shape")
+            semantic = semantic + self.contralateral(difference, semantic)
         semantic = self.up_full(semantic)
         if self.mode == "gated":
             full = self.gate_full(semantic, full)

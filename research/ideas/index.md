@@ -14,6 +14,7 @@
 | [IDEA-008](IDEA-008-input-stem.md) | 输入端卷积补强 | 放弃 | 1/2 细节零初始化加到 patch embedding；完整训练 Mean Dice 与 ET 均下降（EXP-012） |
 | [IDEA-009](idea-009-et-rollback.md) | ET 残差强度门控 | 已实现 | 实现已随训练提交归档，两种回调均未达到 [TASK-007](../../handoff/archive/task-007-et-rollback-screening.md) 的筛选门槛 |
 | [IDEA-010](idea-010-direction-difference-fusion.md) | SS2D 四方向分组融合 | 放弃 | 全主干方向融合未达到收益判据，见 [EXP-017](../experiments/EXP-017/report.md) |
+| [IDEA-011](idea-011-contralateral-reference.md) | 对侧半球参照的多模态差异融合 | 已实现 | 按解剖左右轴构造同一切片的四模态差异，由解码语义控制对侧参照的使用 |
 | — | 区域存在性感知监督 | 放弃 | 非空 ET 有改善，但空 ET 假阳性增多，总体退步；源码在 `VM-UNet-main/archives/` |
 
 ## 候选池（未立项，只保留取舍结论）

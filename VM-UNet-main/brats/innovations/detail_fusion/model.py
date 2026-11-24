@@ -17,14 +17,20 @@ class DetailFusionVMUNet(VMUNet):
         with torch.random.fork_rng(devices=[]):
             self.detail_fusion = DetailFusion(
                 self.input_channels, self.vmunet.dims[0], self.num_classes, settings["mode"],
-                settings["full_channels"], settings["half_channels"])
+                settings["full_channels"], settings["half_channels"], settings.get("contralateral", False))
 
     def forward(self, x):
-        if x.size(1) != self.input_channels:
-            raise ValueError(f"Expected {self.input_channels} input channels, got {x.size(1)}")
+        use_reference = self.detail_fusion.contralateral is not None
+        expected = self.input_channels * (2 if use_reference else 1)
+        if x.size(1) != expected:
+            raise ValueError(f"Expected {expected} input channels, got {x.size(1)}")
+        difference = None
+        if use_reference:
+            x, difference = x.split(self.input_channels, dim=1)
+            x = x.contiguous()
         encoded, skips = self.vmunet.forward_features(x)
         decoded = self.vmunet.forward_features_up(encoded, skips)
         logits = self.vmunet.forward_final(decoded)
         # Keep the baseline logits dtype under autocast; never skip the branch.
-        logits = logits + self.detail_fusion(x, decoded).to(dtype=logits.dtype)
+        logits = logits + self.detail_fusion(x, decoded, difference).to(dtype=logits.dtype)
         return logits.sigmoid() if self.num_classes == 1 else logits

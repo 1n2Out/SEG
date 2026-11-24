@@ -7,12 +7,12 @@ import torch
 from torch.cuda.amp import autocast
 
 from .data import check_cache, save_prediction, write_json
-from .dataset import padding
+from .dataset import left_right_axis, pack_contralateral, padding
 from .metrics import METRICS, REGIONS, evaluate_regions, summarize
 
 
 @torch.no_grad()
-def predict_volume(model, images, device, input_size=256, batch_size=8, amp=False):
+def predict_volume(model, images, device, input_size=256, batch_size=8, amp=False, lr_axis=None):
     """Z,C,X,Y -> original-label X,Y,Z. Includes every axial slice."""
     model.eval()
     z_count, channels, x, y = images.shape
@@ -22,6 +22,8 @@ def predict_volume(model, images, device, input_size=256, batch_size=8, amp=Fals
     prediction = np.empty((z_count, x, y), dtype=np.uint8)
     for start in range(0, z_count, batch_size):
         batch = np.array(images[start:start + batch_size], dtype=np.float32)
+        if lr_axis is not None:
+            batch = pack_contralateral(batch, lr_axis)
         batch = np.pad(batch, ((0, 0), (0, 0)) + pads)
         batch = torch.from_numpy(batch).to(device)
         with autocast(enabled=amp):
@@ -59,8 +61,9 @@ def evaluate(model, manifest, cache_dir, split, device, config,
         if device.type == "cuda":
             torch.cuda.synchronize(device)
         start = time.perf_counter()
+        lr_axis = left_right_axis(metadata) if config.get("detail_fusion", {}).get("contralateral") else None
         prediction = predict_volume(model, images, device, config["input_size"],
-                                    config["inference_batch_size"], config["amp"])
+                                    config["inference_batch_size"], config["amp"], lr_axis=lr_axis)
         if device.type == "cuda":
             torch.cuda.synchronize(device)
         timings.append(time.perf_counter() - start)

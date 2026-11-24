@@ -12,6 +12,7 @@
 |---|---|---|
 | `mode` | `off`（或不写该字段）/ `concat` / `gated` | `off` 为原 VMUNet；`concat` 补出 1/2、1/1 细节支路并与解码语义拼接；`gated` 在拼接前先用语义门控筛选细节 |
 | `full_channels`、`half_channels` | 整数，至少为 2 | 1/1、1/2 尺度的通道数 |
+| `contralateral` | 可选布尔值，默认关闭 | gated 模式的半分辨率[对侧参照分支](contralateral-reference.md) |
 
 省略的字段会补上默认值，并写入 checkpoint。已退役的 `deep_supervision`、`input_stem`（IDEA-007/008）只接受 `false` 并被忽略，以便加载 EXP-014 等由当时代码训练的 checkpoint。
 

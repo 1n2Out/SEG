@@ -14,16 +14,38 @@ def padding(shape, input_size):
     return tuple(((input_size - s) // 2, input_size - s - (input_size - s) // 2) for s in shape)
 
 
+def left_right_axis(metadata):
+    from nibabel.orientations import aff2axcodes
+
+    axes = aff2axcodes(np.asarray(metadata["affine"]))
+    for axis in (0, 1):
+        if axes[axis] in ("L", "R"):
+            return axis
+    raise ValueError(f"Left/right axis must lie in the slice plane: {metadata['case_id']} {axes}")
+
+
+def pack_contralateral(image, axis):
+    """Append signed differences before augmentation or padding, for (..., C, X, Y)."""
+    if axis not in (0, 1):
+        raise ValueError("Expected a left/right axis of 0 or 1")
+    difference = image - np.flip(image, axis=axis - 2)
+    return np.concatenate((image, difference), axis=-3)
+
+
 class BraTSSlices(Dataset):
-    def __init__(self, manifest, cache_dir, split="train", input_size=256, augment=True):
+    def __init__(self, manifest, cache_dir, split="train", input_size=256, augment=True,
+                 contralateral=False):
         if split not in ("train", "val", "test"):
             raise ValueError("Supervised slices require an internal labeled split")
         self.cache_dir, self.input_size = Path(cache_dir), input_size
         self.augment = augment and split == "train"
         self.index = []
         self.maps = {}
+        self.lr_axes = {}
         for case_id in manifest["splits"][split]:
             metadata = check_cache(cache_dir, manifest["cases"][case_id])
+            if contralateral:
+                self.lr_axes[case_id] = left_right_axis(metadata)
             x, y, z = metadata["shape_xyz"]
             padding((x, y), input_size)
             self.index.extend((case_id, k) for k in range(z))
@@ -41,6 +63,8 @@ class BraTSSlices(Dataset):
                                   np.load(directory / "label.npy", mmap_mode="r"))
         images, labels = self.maps[case_id]
         image = np.array(images[z], dtype=np.float32)
+        if case_id in self.lr_axes:
+            image = pack_contralateral(image, self.lr_axes[case_id])
         label = np.array(labels[z], dtype=np.int64)
         label[label == 4] = 3
         if self.augment:

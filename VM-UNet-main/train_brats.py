@@ -377,7 +377,8 @@ def run(args, rank=0, world_size=1, local_rank=0):
         write_json(args.work_dir / ("evaluation_" + split) / "summary.json", summary)
         print(json.dumps(summary, indent=2))
         return
-    dataset = BraTSSlices(manifest, args.cache_dir, "train", config["input_size"])
+    dataset = BraTSSlices(manifest, args.cache_dir, "train", config["input_size"],
+                          contralateral=config.get("detail_fusion", {}).get("contralateral", False))
     generator = torch.Generator().manual_seed(seed)
     # Padding at most world_size-1 slices keeps every rank's step count equal.
     sampler = DistributedSampler(dataset, num_replicas=world_size, rank=rank,

@@ -40,6 +40,7 @@ SEG/                          # git 仓库根目录
 | 输入输出封装、预训练加载 | `models/vmunet/vmunet.py::VMUNet` |
 | 编解码、跳跃连接、selective scan | `models/vmunet/vmamba.py::VSSM / VSSBlock / SS2D` |
 | 模型扩展的注册与分派 | `train_brats.py::innovation_settings / build_model`，以及 `EXTENSIONS` |
+| 对侧半球参照（IDEA-011） | `brats/dataset.py` 和 `brats/engine.py` 按 affine 构造差值，`detail_fusion/block.py::ContralateralFusion` 融入半分辨率特征，见[方法文档](methods/contralateral-reference.md) |
 
 ## 新增模型扩展的约定
 

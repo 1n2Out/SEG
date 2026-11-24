@@ -1,4 +1,5 @@
-"""TASK-008：比较 EXP-017 与两个完整训练对照的 val best。"""
+"""比较候选与 EXP-006、EXP-001 的 val best。默认复核 TASK-008。"""
+import argparse
 from importlib import import_module
 import json
 from statistics import mean
@@ -58,8 +59,11 @@ def compare(candidate, reference):
 
 
 if __name__ == "__main__":
-    candidate = full_training.load_experiment("EXP-017")
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--candidate", choices=("EXP-017", "EXP-018"), default="EXP-017")
+    experiment = parser.parse_args().candidate
+    candidate = full_training.load_experiment(experiment)
     results = {name: compare(candidate, full_training.load_experiment(name))
                for name in ("EXP-006", "EXP-001")}
-    path = full_training.EXPERIMENTS / "EXP-017/comparison-summary.json"
+    path = full_training.EXPERIMENTS / experiment / "comparison-summary.json"
     path.write_text(json.dumps(results, indent=2, allow_nan=False) + "\n", encoding="utf-8")

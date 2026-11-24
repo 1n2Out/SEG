@@ -88,6 +88,45 @@ from train_brats import build_criterion
 BRANCH = ("stem_full", "stem_half", "up_half", "fuse_half", "up_full", "fuse_full")
 
 
+def test_contralateral_formal_config_and_learning():
+    directory = SOURCE / "configs/detail_fusion"
+    base = json.loads((directory / "gated.json").read_text())
+    config = json.loads((directory / "contralateral.json").read_text())
+    validate_config(load_training_config(directory / "contralateral.json"))
+    assert config["detail_fusion"].pop("contralateral") is True
+    assert config["launch"].pop("work_dir") != base["launch"].pop("work_dir")
+    assert config == base
+    for settings in ({"mode": "off", "contralateral": True}, {"mode": "gated", "contralateral": "false"}):
+        with pytest.raises(ValueError, match="contralateral"):
+            resolve_settings(settings)
+
+    torch.manual_seed(42)
+    original = DetailFusion(4, 12, 4)
+    torch.manual_seed(42)
+    block = DetailFusion(4, 12, 4, contralateral=True)
+    for name, value in original.state_dict().items():
+        assert torch.equal(value, block.state_dict()[name])
+    branch = block.contralateral
+    assert sum(p.numel() for p in branch.parameters()) == 2305
+    image, decoder = torch.randn(2, 4, 16, 16), torch.randn(2, 4, 4, 12)
+    difference = image - image.flip((2,))
+    # Nonzero shared head makes any initial change at the half-scale fusion observable.
+    torch.nn.init.normal_(original.head.weight)
+    block.head.load_state_dict(original.head.state_dict())
+    torch.testing.assert_close(original(image, decoder), block(image, decoder, difference), atol=0, rtol=0)
+    torch.nn.init.zeros_(block.head.weight)
+    target = torch.randn_like(image)
+    optimizer = torch.optim.SGD(block.parameters(), lr=0.1)
+    for step in range(3):
+        optimizer.zero_grad(set_to_none=True)
+        (block(image, decoder, difference) - target).square().mean().backward()
+        assert all(p.grad is not None and torch.isfinite(p.grad).all() for p in block.parameters())
+        assert bool(branch.project.weight.grad.abs().sum()) == (step >= 1)
+        assert bool(branch.gate.weight.grad.abs().sum()) == (step >= 2)
+        assert bool(branch.features[1].weight.grad.abs().sum()) == (step >= 2)
+        optimizer.step()
+
+
 def first_conv(module):
     return next(m for m in module.modules() if isinstance(m, torch.nn.Conv2d))
 

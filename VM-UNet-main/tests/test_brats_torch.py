@@ -47,6 +47,59 @@ def test_slice_mapping_and_prediction_reconstruct_all_slices(tmp_path):
     assert np.array_equal(prediction, label.transpose(1, 2, 0))
 
 
+@pytest.mark.parametrize("lr_axis", [0, 1])
+def test_contralateral_training_and_volume_geometry(tmp_path, monkeypatch, lr_axis):
+    from brats.engine import evaluate
+    from brats.dataset import left_right_axis, padding
+
+    case = "synthetic"
+    directory = tmp_path / case
+    directory.mkdir()
+    rng = np.random.default_rng(13)
+    images = rng.normal(size=(3, 4, 21, 24)).astype(np.float16)
+    labels = rng.choice([0, 1, 2, 4], size=(3, 21, 24)).astype(np.uint8)
+    np.save(directory / "image.npy", images)
+    np.save(directory / "label.npy", labels)
+    affine = np.eye(4)
+    affine[[0, lr_axis]] = affine[[lr_axis, 0]]
+    meta = {"preprocess_version": PREPROCESS_VERSION, "case_id": case, "modalities": list(MODALITIES),
+            "shape_xyz": [21, 24, 3], "spacing_xyz_mm": [1, 1, 1], "spatial_unit": "mm",
+            "affine": affine.tolist()}
+    write_json(directory / "metadata.json", meta)
+    manifest = {"splits": {"train": [case], "val": [case]}, "cases": {case: {"id": case, "label": "used"}},
+                "sha256": "synthetic"}
+    dataset = BraTSSlices(manifest, tmp_path, input_size=32, contralateral=True)
+    raw = images.astype(np.float32)
+    reference = raw - np.flip(raw, axis=2 + lr_axis)
+    packed = np.concatenate((raw, reference), axis=1)
+    mapped = labels.copy()
+    mapped[mapped == 4] = 3
+    for k in range(4):
+        monkeypatch.setattr(np.random, "randint", lambda n: k)
+        draws = iter([0.25, 0.75])
+        monkeypatch.setattr(np.random, "random", lambda: next(draws))
+        item = dataset[1]
+        expected = np.flip(np.rot90(packed[1], k, axes=(1, 2)), axis=1)
+        mask = np.flip(np.rot90(mapped[1], k), axis=0)
+        pads = padding(mask.shape, 32)
+        np.testing.assert_array_equal(item["image"], np.pad(expected, ((0, 0),) + pads))
+        np.testing.assert_array_equal(item["label"], np.pad(mask, pads))
+
+    captured = []
+
+    class Capture(torch.nn.Module):
+        def forward(self, x):
+            captured.append(x)
+            return x[:, :4]
+
+    config = {"input_size": 32, "inference_batch_size": 2, "amp": False,
+              "detail_fusion": {"mode": "gated", "contralateral": True}}
+    evaluate(Capture(), manifest, tmp_path, "val", torch.device("cpu"), config, tmp_path / "out")
+    np.testing.assert_array_equal(torch.cat(captured), np.pad(packed, ((0, 0), (0, 0)) + padding((21, 24), 32)))
+    with pytest.raises(ValueError, match="slice plane"):
+        left_right_axis({**meta, "affine": np.eye(4)[[2, 1, 0, 3]]})
+
+
 @pytest.fixture
 def vmunet_components(monkeypatch):
     class DummyVSSM(torch.nn.Module):
