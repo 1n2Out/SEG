@@ -1,0 +1,84 @@
+{
+  "epoch": 30,
+  "patients": 55,
+  "slices_per_patient": 3,
+  "scope": "all spatial positions and groups; tumor cells overlap at least one WT voxel",
+  "uniform_max_probability": 0.25,
+  "blocks": {
+    "vmunet.layers.0.blocks.0.self_attention.direction_fusion.score": {
+      "mean_max_probability": 0.2582962366667661,
+      "fraction_max_above_half": 0.0,
+      "tumor_cells_mean_max_probability": 0.2572111518072385
+    },
+    "vmunet.layers.0.blocks.1.self_attention.direction_fusion.score": {
+      "mean_max_probability": 0.26133382970636543,
+      "fraction_max_above_half": 0.0,
+      "tumor_cells_mean_max_probability": 0.26134970673941593
+    },
+    "vmunet.layers.1.blocks.0.self_attention.direction_fusion.score": {
+      "mean_max_probability": 0.26356508731842043,
+      "fraction_max_above_half": 0.0,
+      "tumor_cells_mean_max_probability": 0.2635797546976695
+    },
+    "vmunet.layers.1.blocks.1.self_attention.direction_fusion.score": {
+      "mean_max_probability": 0.2592617376284166,
+      "fraction_max_above_half": 0.0,
+      "tumor_cells_mean_max_probability": 0.2591832779985595
+    },
+    "vmunet.layers.2.blocks.0.self_attention.direction_fusion.score": {
+      "mean_max_probability": 0.36069384108890185,
+      "fraction_max_above_half": 0.1811523501232097,
+      "tumor_cells_mean_max_probability": 0.5027057831075943
+    },
+    "vmunet.layers.2.blocks.1.self_attention.direction_fusion.score": {
+      "mean_max_probability": 0.2574841195886785,
+      "fraction_max_above_half": 0.0,
+      "tumor_cells_mean_max_probability": 0.2596895058585234
+    },
+    "vmunet.layers.3.blocks.0.self_attention.direction_fusion.score": {
+      "mean_max_probability": 0.9943817799741571,
+      "fraction_max_above_half": 1.0,
+      "tumor_cells_mean_max_probability": 0.9981607242703878
+    },
+    "vmunet.layers.3.blocks.1.self_attention.direction_fusion.score": {
+      "mean_max_probability": 0.9995379415425387,
+      "fraction_max_above_half": 1.0,
+      "tumor_cells_mean_max_probability": 0.9996905212472725
+    },
+    "vmunet.layers_up.0.blocks.0.self_attention.direction_fusion.score": {
+      "mean_max_probability": 0.878850717978044,
+      "fraction_max_above_half": 0.8901160261847756,
+      "tumor_cells_mean_max_probability": 0.9829496668713559
+    },
+    "vmunet.layers_up.0.blocks.1.self_attention.direction_fusion.score": {
+      "mean_max_probability": 0.9995998176661405,
+      "fraction_max_above_half": 0.9999881636012684,
+      "tumor_cells_mean_max_probability": 0.9992861562989295
+    },
+    "vmunet.layers_up.1.blocks.0.self_attention.direction_fusion.score": {
+      "mean_max_probability": 0.2924449183724143,
+      "fraction_max_above_half": 3.84706448213282e-05,
+      "tumor_cells_mean_max_probability": 0.30273882730291524
+    },
+    "vmunet.layers_up.1.blocks.1.self_attention.direction_fusion.score": {
+      "mean_max_probability": 0.5911197510632602,
+      "fraction_max_above_half": 0.5986091537909074,
+      "tumor_cells_mean_max_probability": 0.5529145146364102
+    },
+    "vmunet.layers_up.2.blocks.0.self_attention.direction_fusion.score": {
+      "mean_max_probability": 0.26799637295983053,
+      "fraction_max_above_half": 0.000833777257304808,
+      "tumor_cells_mean_max_probability": 0.29845398896951975
+    },
+    "vmunet.layers_up.2.blocks.1.self_attention.direction_fusion.score": {
+      "mean_max_probability": 0.2723740967837247,
+      "fraction_max_above_half": 0.002412553359185536,
+      "tumor_cells_mean_max_probability": 0.35405922252462846
+    },
+    "vmunet.layers_up.3.blocks.0.self_attention.direction_fusion.score": {
+      "mean_max_probability": 0.30766597390174866,
+      "fraction_max_above_half": 0.04058227646005848,
+      "tumor_cells_mean_max_probability": 0.44185628666490834
+    }
+  }
+}

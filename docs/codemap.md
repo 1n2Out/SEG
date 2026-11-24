@@ -64,3 +64,4 @@ SEG/                          # git 仓库根目录
 - **Windows 端。** 不添加模拟 selective scan 的 CPU 后端，也不自动下载权重。
 - **已退役方案。** 区域存在性监督的配置会被入口拒绝；源码只在 `archives/` 中，恢复时放到独立副本里，不覆盖现有代码。
 - **细节回注的旧实验。** 在独立副本中用训练提交复核退役部件：EXP-011～013（深监督、输入端补强）用 `6785299`，EXP-015/016（ET 回调）用 `8d94b9d`。两组回调的归档验证结果仍可用 [compare-et-rollback.py](../VM-UNet-main/analysis/compare-et-rollback.py) 配对复核。
+- **EXP-017 四方向融合。** 复核模型或方向权重时，在独立副本中检出[归档标签](https://github.com/1n2Out/SEG/tree/exp-017-direction-fusion)。仅复核验证集配对统计可在主线运行 [compare-direction-fusion.py](../VM-UNet-main/analysis/compare-direction-fusion.py)。

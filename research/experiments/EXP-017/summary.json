@@ -1,0 +1,53 @@
+{
+  "exp": "EXP-017",
+  "title": "完整训练：全主干方向融合与细节回注",
+  "run_dir": "brats2020-direction-all_1123_2147",
+  "collected_at": "2026-11-24T13:07:31+08:00",
+  "git": {
+    "commit": "acd6227d945dc8b380c30652f6221f403bda0b31",
+    "branch": "codex/ss2d-direction-fusion",
+    "dirty": true,
+    "changes": [
+      " M STATE.md",
+      " M handoff/task-008-direction-full.md"
+    ]
+  },
+  "config": {
+    "epochs": 100,
+    "batch_size": 16,
+    "learning_rate": 0.0001,
+    "pretrained": "vmamba_small_e238_ema.pth",
+    "warm_start": null,
+    "extension": {
+      "detail_fusion": {
+        "mode": "gated",
+        "full_channels": 16,
+        "half_channels": 32,
+        "direction_fusion": "all"
+      }
+    }
+  },
+  "epochs_completed": 80,
+  "train_hours": 12.69,
+  "parameters": 27539282,
+  "selected_epoch": 30,
+  "selection": "best",
+  "val": {
+    "mean_dice": 0.8170613581871372,
+    "mean_hd95_mm": 15.747536546092055,
+    "WT": {
+      "dice": 0.9017106118691645,
+      "hd95_mm": 6.3010505319336705
+    },
+    "TC": {
+      "dice": 0.8027159852228776,
+      "hd95_mm": 8.644713421825122
+    },
+    "ET": {
+      "dice": 0.7467574774693699,
+      "hd95_mm": 32.29684568451737
+    },
+    "et_empty_false_positive": "2/5",
+    "et_nonempty_dice": 0.7614332252163067
+  }
+}

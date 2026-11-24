@@ -1,0 +1,114 @@
+{
+  "EXP-006": {
+    "n": 55,
+    "mean_dice_delta_pp": -1.3442367876564054,
+    "region_dice_delta_pp": {
+      "WT": -0.7165821001132056,
+      "TC": -1.8331709269357788,
+      "ET": -1.4829573359201764
+    },
+    "mean_hd95_delta_mm": -1.2153372144304893,
+    "nonempty_et_paired_mean_dice_delta_pp": {
+      "n": 50,
+      "mean": -1.4989437837800748,
+      "median": -0.4450714646313432,
+      "up": 16,
+      "down": 34,
+      "tie": 0
+    },
+    "empty_et_paired_mean_dice_delta_pp": {
+      "n": 5,
+      "mean": 0.20283317358037528,
+      "median": -0.532098704642194,
+      "up": 2,
+      "down": 3,
+      "tie": 0
+    },
+    "empty_et_fp_added": [],
+    "empty_et_fp_resolved": [],
+    "empty_et_fp_persistent": [
+      "BraTS20_Training_272",
+      "BraTS20_Training_281"
+    ],
+    "nonempty_region_errors": {
+      "WT": {
+        "n": 55,
+        "precision_delta_pp": 1.3266900456255697,
+        "recall_delta_pp": -2.4783335193362284
+      },
+      "TC": {
+        "n": 55,
+        "precision_delta_pp": -0.7572616685769595,
+        "recall_delta_pp": -2.760487907817769
+      },
+      "ET": {
+        "n": 50,
+        "precision_delta_pp": -1.9168594141649526,
+        "recall_delta_pp": -1.1590018987722805
+      }
+    },
+    "worst_three_mean_dice_delta_pp": {
+      "BraTS20_Training_250": -16.594582596714602,
+      "BraTS20_Training_148": -11.304995599347748,
+      "BraTS20_Training_232": -9.68876806772187
+    },
+    "worst_three_contribution_to_full_mean_pp": -0.6834244775233494,
+    "remaining_patients_mean_delta_pp": -0.6989360972561086
+  },
+  "EXP-001": {
+    "n": 55,
+    "mean_dice_delta_pp": -0.07788969235684728,
+    "region_dice_delta_pp": {
+      "WT": -0.10007889854740659,
+      "TC": -1.089558835355009,
+      "ET": 0.9559686568319181
+    },
+    "mean_hd95_delta_mm": -5.27280784595103,
+    "nonempty_et_paired_mean_dice_delta_pp": {
+      "n": 50,
+      "mean": 0.12421994319864897,
+      "median": 0.2724975346851825,
+      "up": 34,
+      "down": 16,
+      "tie": 0
+    },
+    "empty_et_paired_mean_dice_delta_pp": {
+      "n": 5,
+      "mean": -2.0989860479117253,
+      "median": 0.12181666486265803,
+      "up": 3,
+      "down": 2,
+      "tie": 0
+    },
+    "empty_et_fp_added": [],
+    "empty_et_fp_resolved": [],
+    "empty_et_fp_persistent": [
+      "BraTS20_Training_272",
+      "BraTS20_Training_281"
+    ],
+    "nonempty_region_errors": {
+      "WT": {
+        "n": 55,
+        "precision_delta_pp": 2.779595277297568,
+        "recall_delta_pp": -2.533597748077981
+      },
+      "TC": {
+        "n": 55,
+        "precision_delta_pp": 3.194626629352409,
+        "recall_delta_pp": -5.453365931317143
+      },
+      "ET": {
+        "n": 50,
+        "precision_delta_pp": 2.844894736007094,
+        "recall_delta_pp": 0.14598899071133065
+      }
+    },
+    "worst_three_mean_dice_delta_pp": {
+      "BraTS20_Training_250": -10.053838744563167,
+      "BraTS20_Training_321": -8.166665829360701,
+      "BraTS20_Training_330": -7.657165380823143
+    },
+    "worst_three_contribution_to_full_mean_pp": -0.4705030900863093,
+    "remaining_patients_mean_delta_pp": 0.4152641706754006
+  }
+}

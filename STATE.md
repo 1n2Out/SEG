@@ -1,11 +1,11 @@
 # STATE
-最后更新：2026-11-19，A。
+最后更新：2026-11-24，A。
 
 ## 研究状态
 
 - 用户已确定第二项工作的正式创新点一为 [IDEA-001 语义引导的多分辨率细节回注](research/ideas/IDEA-001-detail-fusion.md)，定稿模型为 [EXP-006](research/experiments/EXP-006/report.md)。论文对照为独立训练的 [EXP-001](research/experiments/EXP-001/report.md) 和直接拼接的门控消融 [EXP-014](research/experiments/EXP-014/report.md)。
-- [TASK-007](handoff/archive/task-007-et-rollback-screening.md) 已关闭归档。无在执行的任务或训练。
-- 下一步可整理论文结构图与验证集病例对照图。额外对照实验、第二数据集和后续任务待用户决定。
+- [TASK-008](handoff/archive/task-008-direction-full.md) 已关闭。[EXP-017](research/experiments/EXP-017/report.md) 作为负结果归档；用户已[确认放弃 IDEA-010](research/decisions.md)。无在执行的任务或训练。
+- 下一步可整理论文结构图与验证集病例对照图。第二创新点的新候选和第二数据集待定。
 
 ## 交接约束
 
