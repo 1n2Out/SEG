@@ -1,6 +1,6 @@
 # TASK-008：四方向分组融合完整训练
 
-状态：待执行 · 发起：A，2026-11-23 · [IDEA-010](../research/ideas/idea-010-direction-difference-fusion.md) · [方法](../docs/methods/direction-fusion.md)
+状态：训练和验证分析已完成，待用户验收 · 发起：A，2026-11-23 · [IDEA-010](../research/ideas/idea-010-direction-difference-fusion.md) · [方法](../docs/methods/direction-fusion.md)
 
 ## 目的与运行清单
 
@@ -50,6 +50,11 @@ python collect_brats.py --run-dir "results/<本次运行目录>" --exp EXP-017 -
 
 ## 回执（B 填写）
 
-- 训练提交、GPU、运行目录、日志及 PID：
-- GPU 检查与异常：
-- 判定、报告链接与建议：
+- EXP-017 训练提交为 `acd6227d945dc8b380c30652f6221f403bda0b31`，使用 `vm_unet` 和 3 号 NVIDIA RTX 6000 Ada，PID 为 `500132`。启动日志已确认第 1 轮首批完成。
+- 以下路径相对 `VM-UNet-main/`。运行目录为 `results/brats2020-direction-all_1123_2147/`，日志为 `logs/brats2020-direction-all_1123_2147.log`，PID 文件为 `logs/brats2020-direction-all_1123_2147.pid`。
+- 已核对两次运行的 `run.json`。与 EXP-006 的划分清单、预训练文件 SHA256 和加载的 208 个张量（25,842,528 个参数）一致。本模型共 27,539,282 个参数。首轮训练 569.3 秒，80 轮累计训练 12.69 小时（不计验证）。
+- CUDA 专项连续两次在第二步反传失败，首个失败参数为 `vmunet.layers.0.blocks.0.self_attention.direction_fusion.describe.weight`，梯度为零。初始 AMP 前向与 gated 逐元素一致，梯度有限性检查通过。
+- 修复前固定合成输入种子 42，第二步反传时测试缩放 128 下有 15 个块的描述器权重梯度全零，缩放 65,536 下有 3 个，FP32 下为 0 个。
+- B 端将方向融合分支的计算保留为 FP32。原 CUDA/AMP 专项两次通过，CPU 方向测试 2 passed。3 号卡上 16 × 4 × 256 × 256 的 smoke 完成前向、反向和单例 val，产物在 `results/brats2020-direction-all_smoke_1123_2145/`。修复提交后的 dry-run 指向正确配置与 GPU，无来源告警。
+- 第 80 轮正常早停，已收集第 30 轮 val best，核对三组的 55 个病例及分区真值体素数。相对 EXP-006，Mean Dice 和非空 ET 组的配对 Mean Dice 均下降，按任务判据优先保留 EXP-006。[实验报告](../research/experiments/EXP-017/report.md) · [配对汇总](../research/experiments/EXP-017/comparison-summary.json)
+- 同轮次对照、分区误差、深层方向权重及待验证的机制假设见[原因核查](../research/experiments/EXP-017/report.md#原因核查)。
