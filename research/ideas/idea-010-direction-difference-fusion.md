@@ -1,6 +1,6 @@
 # IDEA-010：SS2D 四方向分组融合
 
-状态：**已实现** · 方法：[方向融合](../../docs/methods/direction-fusion.md) · 任务：[TASK-008](../../handoff/task-008-direction-full.md)
+状态：**放弃** · 方法：[方向融合](../../docs/methods/direction-fusion.md) · 任务：[TASK-008](../../handoff/task-008-direction-full.md)
 
 ## 动机
 
@@ -19,5 +19,4 @@
 
 ## 验证
 
-一次完整训练检验在创新点一上加入整套方向融合后的净收益。协议、判定和结果去向见 [TASK-008](../../handoff/task-008-direction-full.md)。
-若整模块值得进一步验证，优先消融显式差异：将三张差异描述置零，保留四张原方向描述、门控输入宽度、15 个接入位置及训练协议，从相同预训练初始化独立训练。该对照衡量把差异显式送入门控的额外价值。是否追加由用户依据 EXP-017 决定。
+[EXP-017](../experiments/EXP-017/report.md) 完整训练后，相对 EXP-006 的三个分区验证 Dice 均下降，未达到 [TASK-008](../../handoff/task-008-direction-full.md) 的收益判据。

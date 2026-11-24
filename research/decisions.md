@@ -32,3 +32,4 @@
 - **2026-11-19** 同意探索 [IDEA-010 SS2D 方向差异残差融合](ideas/idea-010-direction-difference-fusion.md)：保留原聚合，以方向差异生成非线性修正；先讨论结构及其与已有方法的区别，作为候选方向。
 - **2026-11-23** 第二个创新点的探索以提升实验指标为首要原则，允许组合已有模块。具体结构仍为候选。
 - **2026-11-23** 第二点直接进行一次完整训练，跳过热启动筛选。实验安排见 [TASK-008](../handoff/task-008-direction-full.md)。
+- **2026-11-24** 放弃 [IDEA-010 全主干四方向分组融合](ideas/idea-010-direction-difference-fusion.md) 作为第二创新点，停止该方案的后续消融。保留 EXP-006 作为后续探索的对照，[EXP-017](experiments/EXP-017/report.md) 作为负结果归档。

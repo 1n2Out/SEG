@@ -1,11 +1,11 @@
 # STATE
-最后更新：2026-11-24，B。
+最后更新：2026-11-24，A。
 
 ## 研究状态
 
 - 用户已确定第二项工作的正式创新点一为 [IDEA-001 语义引导的多分辨率细节回注](research/ideas/IDEA-001-detail-fusion.md)，定稿模型为 [EXP-006](research/experiments/EXP-006/report.md)。论文对照为独立训练的 [EXP-001](research/experiments/EXP-001/report.md) 和直接拼接的门控消融 [EXP-014](research/experiments/EXP-014/report.md)。
 - [TASK-008](handoff/task-008-direction-full.md#回执b-填写) 已完成训练和验证分析，待用户验收。[EXP-017](research/experiments/EXP-017/report.md) 第 80 轮早停，第 30 轮 val best；相对 EXP-006，Mean Dice 下降 1.34 个百分点，Mean HD95 改善 1.22 mm。
-- [EXP-017 原因核查](research/experiments/EXP-017/report.md#原因核查)记录了深层方向权重集中和 TC 召回率下降，两者的因果关系待验证。按任务判据优先保留 EXP-006，IDEA-010 后续取舍待用户裁决。论文图表、第二数据集待安排。
+- 用户已[确认放弃 IDEA-010](research/decisions.md)，保留 EXP-006 作为对照。[EXP-017](research/experiments/EXP-017/report.md) 保留为负结果。第二创新点的新候选、论文图表和第二数据集待安排。
 
 ## 交接约束
 
