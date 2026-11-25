@@ -145,7 +145,9 @@ def test_contralateral_real_backbone_amp_and_checkpoint():
     del reference
     model.train()
     optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4)
-    scaler = torch.cuda.amp.GradScaler(init_scale=128)
+    # Match formal training so gradients through both zero-initialized
+    # projections remain representable during the first updates.
+    scaler = torch.cuda.amp.GradScaler()
     criterion = build_criterion(config)
     branch = model.detail_fusion.contralateral
     target = labels()
