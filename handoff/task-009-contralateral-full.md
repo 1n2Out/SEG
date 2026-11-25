@@ -1,6 +1,6 @@
 # TASK-009 对侧半球参照完整训练
 
-状态：待执行 · 发起：A，2026-11-24 · [IDEA-011](../research/ideas/idea-011-contralateral-reference.md) · [结构与配置](../docs/methods/contralateral-reference.md)
+状态：训练与分析完成，待用户验收 · 发起：A，2026-11-24 · [IDEA-011](../research/ideas/idea-011-contralateral-reference.md) · [结构与配置](../docs/methods/contralateral-reference.md)
 
 ## 目的与运行清单
 
@@ -31,6 +31,7 @@ python run_brats.py train --config "$cfg" --gpus "$gpu" --background
 ```bash
 python collect_brats.py --run-dir "results/<实际运行目录>" --exp EXP-018 --title "完整训练：对侧半球参照与细节回注"
 python analysis/compare-direction-fusion.py --candidate EXP-018
+python analysis/analyze-contralateral-results.py
 ```
 
 ## 通过标准与后续
@@ -45,6 +46,8 @@ python analysis/compare-direction-fusion.py --candidate EXP-018
 
 ## 回执（B 填写）
 
-- 训练提交、GPU、目录、PID / 日志：
-- 检查、异常与修复：
-- EXP-018 报告、配对结果及建议：
+- EXP-018 在 `main` 的 `0570fef8878d8a9851d01de5d407727d78a9f72e` 上启动，使用 RTX 6000 Ada GPU 5，PID `4183571`。在 `VM-UNet-main/` 下，运行目录为 `results/brats2020_contralateral_1124_1755/`，日志和 PID 文件为 `logs/brats2020_contralateral_1124_1755.log`、`logs/brats2020_contralateral_1124_1755.pid`。
+- CPU 检查 3 passed。CUDA 专项的初始缩放值 128 使第三次反传中的差异卷积和门控梯度下溢。测试改用与正式训练一致的默认值 65,536，原有断言全部通过（1 passed）。正式尺寸 smoke 完成前向、反向和单例 val，dry-run 核对通过。
+- `run.json` 与 EXP-006 的患者划分、预训练文件 SHA256、共享加载的 208 个张量（25,842,528 个参数）一致。EXP-018 共 27,501,939 个参数，单卡全局 batch 16。
+- 训练正常完成 100 轮，核对 `latest.pth` 为第 100 轮、`best.pth` 为第 75 轮。已收集 val best，完成与 EXP-006、EXP-001 的逐病例配对。Mean Dice 小幅上升，两个判据均未达到，后续消融待用户裁决。[EXP-018 报告](../research/experiments/EXP-018/report.md) · [配对汇总](../research/experiments/EXP-018/comparison-summary.json)
+- 深入复核使用 EXP-006、EXP-018 原始运行目录中的逐轮验证结果和固定 val 标签缓存。上面的最后一条命令可再生成病例贡献、配对抽样区间、同轮次对照和镜像重叠相关性。[验证复核](../research/experiments/EXP-018/validation-audit.json)

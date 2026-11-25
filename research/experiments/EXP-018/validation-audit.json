@@ -1,0 +1,672 @@
+{
+  "reference": "EXP-006",
+  "candidate": "EXP-018",
+  "split": "val",
+  "bootstrap": {
+    "unit": "paired patient at fixed best checkpoints",
+    "seed": 42,
+    "draws": 20000
+  },
+  "paired_deltas": {
+    "dice": {
+      "WT": {
+        "n": 55,
+        "mean": -0.16543394046517026,
+        "median": -0.07768400338196146,
+        "up": 25,
+        "down": 30,
+        "tie": 0
+      },
+      "TC": {
+        "n": 55,
+        "mean": 0.03137457201646462,
+        "median": 0.16458637334063608,
+        "up": 33,
+        "down": 22,
+        "tie": 0
+      },
+      "ET": {
+        "n": 55,
+        "mean": 0.3984366845386106,
+        "median": 0.0,
+        "up": 25,
+        "down": 23,
+        "tie": 7
+      },
+      "mean_over_regions": {
+        "n": 55,
+        "mean": 0.0881257720299683,
+        "median": 0.07633183206373258,
+        "up": 31,
+        "down": 24,
+        "tie": 0,
+        "paired_mean_bootstrap_95": [
+          -0.5230219367083815,
+          0.7586209866012349
+        ]
+      }
+    },
+    "hd95_mm": {
+      "WT": {
+        "n": 55,
+        "mean": -3.110751218360565,
+        "median": 0.0,
+        "up": 15,
+        "down": 25,
+        "tie": 15
+      },
+      "TC": {
+        "n": 55,
+        "mean": -1.2295497059694978,
+        "median": 0.0,
+        "up": 19,
+        "down": 23,
+        "tie": 13
+      },
+      "ET": {
+        "n": 55,
+        "mean": -7.192923000099896,
+        "median": 0.0,
+        "up": 12,
+        "down": 14,
+        "tie": 29
+      },
+      "mean_over_regions": {
+        "n": 55,
+        "mean": -3.844407974809987,
+        "median": -0.11438191683587313,
+        "up": 16,
+        "down": 34,
+        "tie": 5,
+        "paired_mean_bootstrap_95": [
+          -8.919312541130823,
+          -0.7037124453764954
+        ]
+      }
+    }
+  },
+  "hd95_sensitivity": {
+    "1": {
+      "case_ids": [
+        "BraTS20_Training_298"
+      ],
+      "net_reduction_fraction": 0.5489014419169502,
+      "remaining_mean_delta_mm": -1.7663218366034612
+    },
+    "4": {
+      "case_ids": [
+        "BraTS20_Training_298",
+        "BraTS20_Training_232",
+        "BraTS20_Training_148",
+        "BraTS20_Training_268"
+      ],
+      "net_reduction_fraction": 0.890663136807831,
+      "remaining_mean_delta_mm": -0.4533029996826963
+    }
+  },
+  "influential_case": "BraTS20_Training_298",
+  "influential_case_et": {
+    "EXP-006": {
+      "target_voxels": 94.0,
+      "prediction_voxels": 0.0,
+      "dice": 0.0,
+      "hd95_mm": 373.1286641361127,
+      "recall": 0.0
+    },
+    "EXP-018": {
+      "target_voxels": 94.0,
+      "prediction_voxels": 18.0,
+      "dice": 0.19642857142857142,
+      "hd95_mm": 23.155355776935874,
+      "recall": 0.11702127659574468
+    }
+  },
+  "wt_mirror_overlap_spearman": {
+    "dice": -0.1048961757696904,
+    "hd95_mm": 0.1005762380629982
+  },
+  "epochs": [
+    {
+      "epoch": 1,
+      "mean_dice_delta_pp": 1.061326943200669,
+      "mean_hd95_delta_mm": -4.354956408121627,
+      "remaining_mean_hd95_delta_mm": -4.432070440536226,
+      "influential_case_et_dice": [
+        0.1782178217821782,
+        0.20168067226890757
+      ]
+    },
+    {
+      "epoch": 5,
+      "mean_dice_delta_pp": 0.001064701657238487,
+      "mean_hd95_delta_mm": 4.815193328348986,
+      "remaining_mean_hd95_delta_mm": 4.879611436539626,
+      "influential_case_et_dice": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "epoch": 10,
+      "mean_dice_delta_pp": 1.1795556126333984,
+      "mean_hd95_delta_mm": -5.739841668802487,
+      "remaining_mean_hd95_delta_mm": -3.6614265896631757,
+      "influential_case_et_dice": [
+        0.0,
+        0.1076923076923077
+      ]
+    },
+    {
+      "epoch": 15,
+      "mean_dice_delta_pp": 0.42155404752330927,
+      "mean_hd95_delta_mm": -4.417453054705007,
+      "remaining_mean_hd95_delta_mm": -6.729888870241972,
+      "influential_case_et_dice": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "epoch": 20,
+      "mean_dice_delta_pp": 4.360458997137195,
+      "mean_hd95_delta_mm": -7.066123269781503,
+      "remaining_mean_hd95_delta_mm": -4.987901345623833,
+      "influential_case_et_dice": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "epoch": 25,
+      "mean_dice_delta_pp": 0.25115944753657526,
+      "mean_hd95_delta_mm": -2.658072770959329,
+      "remaining_mean_hd95_delta_mm": -0.6342321424058568,
+      "influential_case_et_dice": [
+        0.0,
+        0.041666666666666664
+      ]
+    },
+    {
+      "epoch": 30,
+      "mean_dice_delta_pp": 0.6035108522256638,
+      "mean_hd95_delta_mm": -3.1698481663082987,
+      "remaining_mean_hd95_delta_mm": -5.282407511818107,
+      "influential_case_et_dice": [
+        0.021052631578947368,
+        0.0
+      ]
+    },
+    {
+      "epoch": 35,
+      "mean_dice_delta_pp": -2.3062396940524033,
+      "mean_hd95_delta_mm": 1.3438233524828327,
+      "remaining_mean_hd95_delta_mm": 3.523527212535349,
+      "influential_case_et_dice": [
+        0.0,
+        0.05825242718446602
+      ]
+    },
+    {
+      "epoch": 40,
+      "mean_dice_delta_pp": 0.29649294259078696,
+      "mean_hd95_delta_mm": -1.5396548613336485,
+      "remaining_mean_hd95_delta_mm": 0.6184406086897631,
+      "influential_case_et_dice": [
+        0.0,
+        0.19130434782608696
+      ]
+    },
+    {
+      "epoch": 45,
+      "mean_dice_delta_pp": 1.143843385076404,
+      "mean_hd95_delta_mm": -2.0580751658548486,
+      "remaining_mean_hd95_delta_mm": 0.10802341450583341,
+      "influential_case_et_dice": [
+        0.0,
+        0.19444444444444445
+      ]
+    },
+    {
+      "epoch": 50,
+      "mean_dice_delta_pp": -0.10482412189157797,
+      "mean_hd95_delta_mm": -1.9585644359076007,
+      "remaining_mean_hd95_delta_mm": 0.1534130162293721,
+      "influential_case_et_dice": [
+        0.0,
+        0.021052631578947368
+      ]
+    },
+    {
+      "epoch": 55,
+      "mean_dice_delta_pp": -0.9760688419998664,
+      "mean_hd95_delta_mm": 0.2991759912698093,
+      "remaining_mean_hd95_delta_mm": 0.2960365631396229,
+      "influential_case_et_dice": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "epoch": 60,
+      "mean_dice_delta_pp": 0.02654958144550079,
+      "mean_hd95_delta_mm": -1.714896663856841,
+      "remaining_mean_hd95_delta_mm": 0.41763760532099425,
+      "influential_case_et_dice": [
+        0.0,
+        0.13333333333333333
+      ]
+    },
+    {
+      "epoch": 65,
+      "mean_dice_delta_pp": -0.6462539315067573,
+      "mean_hd95_delta_mm": -3.407830124103569,
+      "remaining_mean_hd95_delta_mm": -1.2800273921028875,
+      "influential_case_et_dice": [
+        0.0,
+        0.30409356725146197
+      ]
+    },
+    {
+      "epoch": 70,
+      "mean_dice_delta_pp": -0.17965603122969132,
+      "mean_hd95_delta_mm": -1.7440678853411775,
+      "remaining_mean_hd95_delta_mm": 0.3791508918962627,
+      "influential_case_et_dice": [
+        0.0,
+        0.23333333333333334
+      ]
+    },
+    {
+      "epoch": 75,
+      "mean_dice_delta_pp": 0.20882537768641685,
+      "mean_hd95_delta_mm": -3.966809072744775,
+      "remaining_mean_hd95_delta_mm": -1.8812975373018688,
+      "influential_case_et_dice": [
+        0.0,
+        0.19642857142857142
+      ]
+    },
+    {
+      "epoch": 80,
+      "mean_dice_delta_pp": 0.662272300130784,
+      "mean_hd95_delta_mm": -5.812732555347106,
+      "remaining_mean_hd95_delta_mm": -3.7410193331601977,
+      "influential_case_et_dice": [
+        0.0,
+        0.2773722627737226
+      ]
+    },
+    {
+      "epoch": 85,
+      "mean_dice_delta_pp": -0.11600986168417426,
+      "mean_hd95_delta_mm": -0.8633563223762497,
+      "remaining_mean_hd95_delta_mm": 1.2937152300522268,
+      "influential_case_et_dice": [
+        0.0,
+        0.2677165354330709
+      ]
+    },
+    {
+      "epoch": 90,
+      "mean_dice_delta_pp": 0.015177652943121345,
+      "mean_hd95_delta_mm": -2.2314275193278323,
+      "remaining_mean_hd95_delta_mm": -0.09680059161895471,
+      "influential_case_et_dice": [
+        0.0,
+        0.26666666666666666
+      ]
+    },
+    {
+      "epoch": 95,
+      "mean_dice_delta_pp": 0.016398794486272017,
+      "mean_hd95_delta_mm": -2.592114553506665,
+      "remaining_mean_hd95_delta_mm": -0.4640995547563289,
+      "influential_case_et_dice": [
+        0.0,
+        0.2644628099173554
+      ]
+    },
+    {
+      "epoch": 100,
+      "mean_dice_delta_pp": -0.06265801428997353,
+      "mean_hd95_delta_mm": -1.8947507274569713,
+      "remaining_mean_hd95_delta_mm": 0.24676577062623117,
+      "influential_case_et_dice": [
+        0.0,
+        0.26229508196721313
+      ]
+    }
+  ],
+  "case_deltas": [
+    {
+      "case_id": "BraTS20_Training_011",
+      "mean_dice_delta_pp": -0.9108677656795128,
+      "mean_hd95_delta_mm": 0.6511933120665646,
+      "wt_mirror_overlap": 0.0
+    },
+    {
+      "case_id": "BraTS20_Training_026",
+      "mean_dice_delta_pp": -0.31793593057098574,
+      "mean_hd95_delta_mm": 0.1725181167178905,
+      "wt_mirror_overlap": 0.03304211097454296
+    },
+    {
+      "case_id": "BraTS20_Training_027",
+      "mean_dice_delta_pp": -0.3914869649952209,
+      "mean_hd95_delta_mm": 0.6291438695001447,
+      "wt_mirror_overlap": 0.0
+    },
+    {
+      "case_id": "BraTS20_Training_035",
+      "mean_dice_delta_pp": -0.5087555916756729,
+      "mean_hd95_delta_mm": -0.1977281709147718,
+      "wt_mirror_overlap": 0.03154221912072575
+    },
+    {
+      "case_id": "BraTS20_Training_054",
+      "mean_dice_delta_pp": 0.07633183206373258,
+      "mean_hd95_delta_mm": -0.12631246065433746,
+      "wt_mirror_overlap": 0.0
+    },
+    {
+      "case_id": "BraTS20_Training_056",
+      "mean_dice_delta_pp": -0.18771801332498525,
+      "mean_hd95_delta_mm": -0.0809437568843534,
+      "wt_mirror_overlap": 0.018568022541723864
+    },
+    {
+      "case_id": "BraTS20_Training_066",
+      "mean_dice_delta_pp": -0.029583503134456013,
+      "mean_hd95_delta_mm": -0.8485799995037465,
+      "wt_mirror_overlap": 0.0
+    },
+    {
+      "case_id": "BraTS20_Training_067",
+      "mean_dice_delta_pp": -0.0029498050795366084,
+      "mean_hd95_delta_mm": 0.0,
+      "wt_mirror_overlap": 0.013194896747251062
+    },
+    {
+      "case_id": "BraTS20_Training_073",
+      "mean_dice_delta_pp": -0.08320517701637664,
+      "mean_hd95_delta_mm": 0.0,
+      "wt_mirror_overlap": 0.0
+    },
+    {
+      "case_id": "BraTS20_Training_075",
+      "mean_dice_delta_pp": -3.0460949735412726,
+      "mean_hd95_delta_mm": 2.6858852767285994,
+      "wt_mirror_overlap": 0.0991265927394308
+    },
+    {
+      "case_id": "BraTS20_Training_078",
+      "mean_dice_delta_pp": 1.0064714184676915,
+      "mean_hd95_delta_mm": -1.1155730682708225,
+      "wt_mirror_overlap": 0.0
+    },
+    {
+      "case_id": "BraTS20_Training_081",
+      "mean_dice_delta_pp": 0.23070698716361285,
+      "mean_hd95_delta_mm": -0.07868932583326327,
+      "wt_mirror_overlap": 0.0
+    },
+    {
+      "case_id": "BraTS20_Training_086",
+      "mean_dice_delta_pp": 11.05566408621951,
+      "mean_hd95_delta_mm": -5.140777058482425,
+      "wt_mirror_overlap": 0.0
+    },
+    {
+      "case_id": "BraTS20_Training_090",
+      "mean_dice_delta_pp": 0.39286943572408956,
+      "mean_hd95_delta_mm": -0.43927908173192737,
+      "wt_mirror_overlap": 0.030631024049408904
+    },
+    {
+      "case_id": "BraTS20_Training_092",
+      "mean_dice_delta_pp": 0.15142768535967668,
+      "mean_hd95_delta_mm": -0.08931639747704094,
+      "wt_mirror_overlap": 0.42560470765335795
+    },
+    {
+      "case_id": "BraTS20_Training_100",
+      "mean_dice_delta_pp": -0.5882331320883819,
+      "mean_hd95_delta_mm": 0.867908369052183,
+      "wt_mirror_overlap": 0.0
+    },
+    {
+      "case_id": "BraTS20_Training_101",
+      "mean_dice_delta_pp": 0.041437179481681095,
+      "mean_hd95_delta_mm": -0.05719095841793657,
+      "wt_mirror_overlap": 0.0
+    },
+    {
+      "case_id": "BraTS20_Training_104",
+      "mean_dice_delta_pp": 0.32547435908091654,
+      "mean_hd95_delta_mm": -0.25464400750007005,
+      "wt_mirror_overlap": 0.0041960102542947224
+    },
+    {
+      "case_id": "BraTS20_Training_107",
+      "mean_dice_delta_pp": -0.23698545292997938,
+      "mean_hd95_delta_mm": 0.15737865166652654,
+      "wt_mirror_overlap": 0.012707295036577191
+    },
+    {
+      "case_id": "BraTS20_Training_121",
+      "mean_dice_delta_pp": -0.16861548503732302,
+      "mean_hd95_delta_mm": 0.0,
+      "wt_mirror_overlap": 0.0582949753314407
+    },
+    {
+      "case_id": "BraTS20_Training_144",
+      "mean_dice_delta_pp": -0.13150275518032753,
+      "mean_hd95_delta_mm": 0.12631246065433746,
+      "wt_mirror_overlap": 0.4410544964064985
+    },
+    {
+      "case_id": "BraTS20_Training_148",
+      "mean_dice_delta_pp": -5.7176022470992,
+      "mean_hd95_delta_mm": -22.387481351065095,
+      "wt_mirror_overlap": 0.0006695815784716131
+    },
+    {
+      "case_id": "BraTS20_Training_155",
+      "mean_dice_delta_pp": -3.347011446515872,
+      "mean_hd95_delta_mm": 0.524725228947841,
+      "wt_mirror_overlap": 0.0
+    },
+    {
+      "case_id": "BraTS20_Training_163",
+      "mean_dice_delta_pp": -0.04168581605608068,
+      "mean_hd95_delta_mm": -0.2729910135824591,
+      "wt_mirror_overlap": 0.025681518109094675
+    },
+    {
+      "case_id": "BraTS20_Training_168",
+      "mean_dice_delta_pp": 1.3846579906551657,
+      "mean_hd95_delta_mm": -0.6623478019174697,
+      "wt_mirror_overlap": 0.0
+    },
+    {
+      "case_id": "BraTS20_Training_171",
+      "mean_dice_delta_pp": -1.1047564824076168,
+      "mean_hd95_delta_mm": 0.7742304495890218,
+      "wt_mirror_overlap": 0.2475050172703319
+    },
+    {
+      "case_id": "BraTS20_Training_178",
+      "mean_dice_delta_pp": 0.21973891993416853,
+      "mean_hd95_delta_mm": 0.0,
+      "wt_mirror_overlap": 0.0
+    },
+    {
+      "case_id": "BraTS20_Training_179",
+      "mean_dice_delta_pp": 0.17005065845383527,
+      "mean_hd95_delta_mm": -0.11438191683587313,
+      "wt_mirror_overlap": 0.0
+    },
+    {
+      "case_id": "BraTS20_Training_191",
+      "mean_dice_delta_pp": 0.22269100339716852,
+      "mean_hd95_delta_mm": -0.16972498609555867,
+      "wt_mirror_overlap": 0.06380425052219754
+    },
+    {
+      "case_id": "BraTS20_Training_209",
+      "mean_dice_delta_pp": 0.23467331434786262,
+      "mean_hd95_delta_mm": -0.10594574839859401,
+      "wt_mirror_overlap": 0.0
+    },
+    {
+      "case_id": "BraTS20_Training_210",
+      "mean_dice_delta_pp": 0.3629827056925568,
+      "mean_hd95_delta_mm": 0.2560389652445612,
+      "wt_mirror_overlap": 0.21357730890541202
+    },
+    {
+      "case_id": "BraTS20_Training_218",
+      "mean_dice_delta_pp": 0.5057916206706,
+      "mean_hd95_delta_mm": -2.5359023306303072,
+      "wt_mirror_overlap": 0.0005569929567342245
+    },
+    {
+      "case_id": "BraTS20_Training_225",
+      "mean_dice_delta_pp": 0.18613895261136992,
+      "mean_hd95_delta_mm": -0.16047393088132264,
+      "wt_mirror_overlap": 0.03353158624972106
+    },
+    {
+      "case_id": "BraTS20_Training_228",
+      "mean_dice_delta_pp": -1.3938911605038573,
+      "mean_hd95_delta_mm": -1.894437418022682,
+      "wt_mirror_overlap": 0.0
+    },
+    {
+      "case_id": "BraTS20_Training_231",
+      "mean_dice_delta_pp": 0.43518912909781643,
+      "mean_hd95_delta_mm": 0.0,
+      "wt_mirror_overlap": 0.0
+    },
+    {
+      "case_id": "BraTS20_Training_232",
+      "mean_dice_delta_pp": 5.027763259840886,
+      "mean_hd95_delta_mm": -27.58065617150285,
+      "wt_mirror_overlap": 0.0
+    },
+    {
+      "case_id": "BraTS20_Training_234",
+      "mean_dice_delta_pp": 1.8661392716514313,
+      "mean_hd95_delta_mm": -1.9939954676890246,
+      "wt_mirror_overlap": 0.31442354626653735
+    },
+    {
+      "case_id": "BraTS20_Training_238",
+      "mean_dice_delta_pp": 0.004057348078123635,
+      "mean_hd95_delta_mm": 0.05771218532721504,
+      "wt_mirror_overlap": 0.005668650883809697
+    },
+    {
+      "case_id": "BraTS20_Training_241",
+      "mean_dice_delta_pp": -0.204614185759285,
+      "mean_hd95_delta_mm": -0.07868932583326327,
+      "wt_mirror_overlap": 0.03618255946038763
+    },
+    {
+      "case_id": "BraTS20_Training_249",
+      "mean_dice_delta_pp": 0.3627859917891348,
+      "mean_hd95_delta_mm": -3.759249547383494,
+      "wt_mirror_overlap": 0.0
+    },
+    {
+      "case_id": "BraTS20_Training_250",
+      "mean_dice_delta_pp": -5.8357211218888745,
+      "mean_hd95_delta_mm": -5.112943417133003,
+      "wt_mirror_overlap": 0.0
+    },
+    {
+      "case_id": "BraTS20_Training_260",
+      "mean_dice_delta_pp": 0.24774261166888487,
+      "mean_hd95_delta_mm": -0.6052390323191124,
+      "wt_mirror_overlap": 0.3279384664690329
+    },
+    {
+      "case_id": "BraTS20_Training_268",
+      "mean_dice_delta_pp": 3.0213884034425704,
+      "mean_hd95_delta_mm": -22.29478867020147,
+      "wt_mirror_overlap": 0.0
+    },
+    {
+      "case_id": "BraTS20_Training_272",
+      "mean_dice_delta_pp": 0.11979873002938198,
+      "mean_hd95_delta_mm": 0.07475508341467856,
+      "wt_mirror_overlap": 0.0066109613013155405
+    },
+    {
+      "case_id": "BraTS20_Training_281",
+      "mean_dice_delta_pp": 0.6611202552688952,
+      "mean_hd95_delta_mm": -3.5021919713860448,
+      "wt_mirror_overlap": 0.010121132057008255
+    },
+    {
+      "case_id": "BraTS20_Training_290",
+      "mean_dice_delta_pp": -1.4157972465841162,
+      "mean_hd95_delta_mm": 0.6721486217122171,
+      "wt_mirror_overlap": 0.1930417097928129
+    },
+    {
+      "case_id": "BraTS20_Training_298",
+      "mean_dice_delta_pp": 5.38058234550223,
+      "mean_hd95_delta_mm": -116.06105943796233,
+      "wt_mirror_overlap": 0.05918144014007441
+    },
+    {
+      "case_id": "BraTS20_Training_299",
+      "mean_dice_delta_pp": -4.805457422733449,
+      "mean_hd95_delta_mm": 0.5162343871577283,
+      "wt_mirror_overlap": 0.0
+    },
+    {
+      "case_id": "BraTS20_Training_321",
+      "mean_dice_delta_pp": -1.3822228120991562,
+      "mean_hd95_delta_mm": -6.14035541661826,
+      "wt_mirror_overlap": 0.11071658146867061
+    },
+    {
+      "case_id": "BraTS20_Training_323",
+      "mean_dice_delta_pp": -1.4580639972346006,
+      "mean_hd95_delta_mm": 5.412812219428254,
+      "wt_mirror_overlap": 0.012830786995148601
+    },
+    {
+      "case_id": "BraTS20_Training_330",
+      "mean_dice_delta_pp": 3.3077724771424397,
+      "mean_hd95_delta_mm": -0.1478788452878496,
+      "wt_mirror_overlap": 0.0
+    },
+    {
+      "case_id": "BraTS20_Training_344",
+      "mean_dice_delta_pp": 0.08399622238674335,
+      "mean_hd95_delta_mm": 0.234933761439291,
+      "wt_mirror_overlap": 0.0
+    },
+    {
+      "case_id": "BraTS20_Training_359",
+      "mean_dice_delta_pp": 0.06210933784156122,
+      "mean_hd95_delta_mm": -0.1380711874576984,
+      "wt_mirror_overlap": 2.3572396723436855e-05
+    },
+    {
+      "case_id": "BraTS20_Training_361",
+      "mean_dice_delta_pp": 0.592400974904075,
+      "mean_hd95_delta_mm": -0.2738579093448779,
+      "wt_mirror_overlap": 0.0734827941794294
+    },
+    {
+      "case_id": "BraTS20_Training_364",
+      "mean_dice_delta_pp": 0.4177214428165839,
+      "mean_hd95_delta_mm": -0.8346723899769707,
+      "wt_mirror_overlap": 0.0
+    }
+  ]
+}

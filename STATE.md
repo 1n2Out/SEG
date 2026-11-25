@@ -1,11 +1,11 @@
 # STATE
-最后更新：2026-11-24，A。
+最后更新：2026-11-25，B。
 
 ## 研究状态
 
 - 用户已确定第二项工作的正式创新点一为 [IDEA-001 语义引导的多分辨率细节回注](research/ideas/IDEA-001-detail-fusion.md)，定稿模型为 [EXP-006](research/experiments/EXP-006/report.md)。论文对照为独立训练的 [EXP-001](research/experiments/EXP-001/report.md) 和直接拼接的门控消融 [EXP-014](research/experiments/EXP-014/report.md)。
-- [TASK-008](handoff/archive/task-008-direction-full.md) 已关闭。[EXP-017](research/experiments/EXP-017/report.md) 作为负结果归档；用户已[确认放弃 IDEA-010](research/decisions.md)。无在执行的任务或训练。
-- [IDEA-011 对侧半球参照](research/ideas/idea-011-contralateral-reference.md) 已实现并通过 A 端 CPU 检查。[TASK-009](handoff/task-009-contralateral-full.md) 已备妥，待用户通知 B 执行 EXP-018 单次完整训练。第二数据集待定。
+- [TASK-008](handoff/archive/task-008-direction-full.md) 已关闭。[EXP-017](research/experiments/EXP-017/report.md) 作为负结果归档，用户已[确认放弃 IDEA-010](research/decisions.md)。
+- [TASK-009](handoff/task-009-contralateral-full.md#回执b-填写) 已完成训练和验证分析。相对 EXP-006，Mean Dice 小幅上升，非空 ET 组略降，两个通过判据均未达到。Mean HD95 的净降幅主要来自少数病例。是否开展同容量原图消融、如何选择第二数据集，待用户裁决。[EXP-018 报告](research/experiments/EXP-018/report.md)
 
 ## 交接约束
 

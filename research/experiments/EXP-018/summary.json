@@ -1,0 +1,52 @@
+{
+  "exp": "EXP-018",
+  "title": "完整训练：对侧半球参照与细节回注",
+  "run_dir": "brats2020_contralateral_1124_1755",
+  "collected_at": "2026-11-25T17:28:29+08:00",
+  "git": {
+    "commit": "0570fef8878d8a9851d01de5d407727d78a9f72e",
+    "branch": "main",
+    "dirty": true,
+    "changes": [
+      " M VM-UNet-main/tests/test_detail_fusion_cuda.py"
+    ]
+  },
+  "config": {
+    "epochs": 100,
+    "batch_size": 16,
+    "learning_rate": 0.0001,
+    "pretrained": "vmamba_small_e238_ema.pth",
+    "warm_start": null,
+    "extension": {
+      "detail_fusion": {
+        "mode": "gated",
+        "full_channels": 16,
+        "half_channels": 32,
+        "contralateral": true
+      }
+    }
+  },
+  "epochs_completed": 100,
+  "train_hours": 13.46,
+  "parameters": 27501939,
+  "selected_epoch": 75,
+  "selection": "best",
+  "val": {
+    "mean_dice": 0.8313849837840008,
+    "mean_hd95_mm": 13.11846578571256,
+    "WT": {
+      "dice": 0.9072220934656449,
+      "hd95_mm": 6.6830515532504275
+    },
+    "TC": {
+      "dice": 0.8213614402123997,
+      "hd95_mm": 7.875985898393548
+    },
+    "ET": {
+      "dice": 0.7655714176739579,
+      "hd95_mm": 24.796359905493706
+    },
+    "et_empty_false_positive": "2/5",
+    "et_nonempty_dice": 0.7821285594413537
+  }
+}

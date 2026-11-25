@@ -6,7 +6,7 @@
 
 同一张轴向 MRI 同时包含两侧半球。为每个位置提供同一患者对侧近似对应位置的四模态信号，可以检验个体内强度差是否有助于区分病灶和正常结构。
 
-按固定 train 清单和 NIfTI affine 确认左右轴，以数组中心近似中线。逐患者统计 WT 镜像落在 WT 外且两侧 FLAIR 非零的比例，并统计这些配对中本侧更亮的比例。ET 单独用 T1ce 做同样的强度比较，参照仍须位于 WT 外。[分析脚本](../../VM-UNet-main/analysis/contralateral-reference.py) · [训练集汇总](../../VM-UNet-main/results/analysis/contralateral-reference/summary.json)
+按固定 train 清单和 NIfTI affine 确认左右轴，以数组中心近似中线。逐患者统计 WT 镜像落在 WT 外且两侧 FLAIR 非零的比例，并统计这些配对中本侧更亮的比例。ET 单独用 T1ce 做同样的强度比较，参照仍须位于 WT 外。在 `VM-UNet-main/` 运行 `python analysis/contralateral-reference.py` 可生成训练集汇总。[分析脚本](../../VM-UNet-main/analysis/contralateral-reference.py)
 
 上述统计检验有标签病灶是否存在参照与强度差。正常组织的不对称也能产生差异，跨中线病灶和占位变形会削弱参照价值。
 
@@ -28,4 +28,4 @@ Zhang 等在《Segmenting Brain Tumors with Symmetry》（ML4H Workshop 2017）�
 
 ## 结论
 
-已完成 train 动机核验。模型的验证集增益待完整训练。A 曾接触既有 FINAL，候选依据仅来自 train、既有 val 和公开文献。
+EXP-018 完整训练后，验证集 Mean Dice 小幅上升，非空 ET 组配对均值略降。Mean HD95 的降幅集中在少数大误差病例，WT 镜像重叠比例与逐病例收益仅呈弱相关。A 曾接触既有 FINAL，本轮设计与比较使用 train 和 val。[EXP-018 验证报告](../experiments/EXP-018/report.md)
